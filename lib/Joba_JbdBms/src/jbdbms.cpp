@@ -4,18 +4,18 @@
 // Debug
 
 static void hex( const char *label, const uint8_t *data, size_t length ) {
-    Serial.printf("%s:", label);
+    //Serial.printf("%s:", label);
     while( length-- ) {
-        Serial.printf(" %02x", *(data++));
+        //Serial.printf(" %02x", *(data++));
     }
-    Serial.println();
+    //Serial.println();
 }
 
 
 // Basic methods
 
-JbdBms::JbdBms( Stream &serial, uint32_t *prev, uint8_t command_delay_ms ) 
-    : _serial(serial), _delay(command_delay_ms), _prev(prev), _dir_pin(-1) {
+JbdBms::JbdBms( uint32_t *prev, uint8_t command_delay_ms ) 
+    : _delay(command_delay_ms), _prev(prev), _dir_pin(-1) {
     if (!_prev) {
         _prev = &_prev_local;
     }
