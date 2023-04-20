@@ -1,7 +1,7 @@
 //#define BLUETOOTH
 //#define EPAPER
 #define OLED
-#define RTC
+//#define RTC
 //#define SDCARD
 #define BMS
 
@@ -60,8 +60,8 @@
     // BMS Lib
     #include <jbdbms.h>
     JbdBms jbdbms = JbdBms();
-    #define BMS_RX_PIN 15
-    #define BMS_TX_PIN 14
+    #define BMS_RX_PIN 33
+    #define BMS_TX_PIN 32
     void printBMSStatus(JbdBms::Status_t status, JbdBms::Cells_t cells);
 #endif
 
@@ -148,7 +148,8 @@ void loop() {
         oled.setTextSize(1);
         oled.setTextColor(WHITE);
         oled.setCursor(0, 10);
-
+        
+        #ifdef RTC
         Serial.printf(
             "%u.%u.%u %u:%u:%u\n", 
             myRTC.getDate(), 
@@ -158,6 +159,7 @@ void loop() {
             myRTC.getMinute(), 
             myRTC.getSecond()
         );
+        #endif
 
         if(A < -0.02) {
             Serial.println("Charging");
@@ -182,15 +184,17 @@ void loop() {
         oled.printf("A: %.2fA (%.2fW)\n", A, W);
         oled.printf("Temp: %.1fC | %.1fC\n", float(status.temperatures[0].lo)/10, float(status.temperatures[1].lo)/10);
 
-        oled.printf(
-            "%u.%u.%u %u:%u:%u\n", 
-            myRTC.getDate(), 
-            myRTC.getMonth(century), 
-            myRTC.getYear(), 
-            myRTC.getHour(h12Flag, pmFlag), 
-            myRTC.getMinute(), 
-            myRTC.getSecond()
-        );
+        #ifdef RTC
+            oled.printf(
+                "%u.%u.%u %u:%u:%u\n", 
+                myRTC.getDate(), 
+                myRTC.getMonth(century), 
+                myRTC.getYear(), 
+                myRTC.getHour(h12Flag, pmFlag), 
+                myRTC.getMinute(), 
+                myRTC.getSecond()
+            );
+        #endif
 
         Serial.printf("V: %.2fV (%.2fV)\n", V, avgCellVolt);
         Serial.printf("A: %.2fA\n", A);
