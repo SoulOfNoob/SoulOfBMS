@@ -19,7 +19,6 @@ void setup() {
         MyBluetooth::initBT();
     #endif
 
-    delay(1000);
     Serial.println("Finished setup");
     Serial.println("-------------------------------");
 }

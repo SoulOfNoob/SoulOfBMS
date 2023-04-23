@@ -8,7 +8,7 @@ MyBMS::shared_bms_data_t *MyBMS::_myBMSData;
 
 void MyBMS::initBMS(shared_bms_data_t *myBMSData) {
     _myBMSData = myBMSData;
-    xTaskCreate( taskCallbackBMS, "TaskHandleBMS", 10000, NULL, 1, &TaskHandleBMS );
+    xTaskCreate( taskCallbackBMS, "TaskHandleBMS", 10000, NULL, 2, &TaskHandleBMS );
 }
 
 void MyBMS::readBMSStatus() {
