@@ -11,10 +11,29 @@
     #include <GxEPD2_BW.h>
     #include <Fonts/FreeMonoBold9pt7b.h>
 
-    void epaperHelloWorld();
-    void initEPAPERTask( void * pvParameters );
+    #include "bms.h"
 
-    bool initOLED();
-    bool initEPAPER();
+    #define TASK_INTERVAL_OLED 500 // 1 sec
+    #define TASK_INTERVAL_EPAPER 1000 * 60 * 5 // 15 min
+
+    class MyDisplays {
+        public:
+            static void initDisplays(MyBMS::shared_bms_data_t *myBMSData);
+
+            static void initOLED();
+            static void initEPAPER();
+
+            static void epaperHelloWorld();
+
+            static void updateOLED();
+            static void updateEPAPER();
+
+        private:
+            static MyBMS::shared_bms_data_t *_myBMSData;
+            static void taskCallbackOLED( void * pvParameters );
+            static void taskCallbackEPAPER( void * pvParameters );
+    };
+
+    
 
 #endif

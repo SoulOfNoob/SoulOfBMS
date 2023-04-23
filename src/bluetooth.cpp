@@ -16,22 +16,27 @@ BLECharacteristic *pTxCharacteristic;
 #define Serial1_BUF_SIZE_MAX 20
 uint8_t *Serial1ReadBuffer = new uint8_t[Serial1_BUF_SIZE_MAX];
 
+TaskHandle_t TaskHandleBT;
+TaskHandle_t TaskHandleBMS2;
 bool deviceConnected = false;
-
-bool getDeviceConnected() {
-    return deviceConnected;
-}
 
 //Setup callbacks onConnect and onDisconnect
 class ServerConnectionCallback: public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
-    Serial.println("Device Connected");
     deviceConnected = true;
+    vTaskSuspend(TaskHandleBMS2);
+    delay(10);
+    Serial.println("Device Connected");
+    vTaskResume(TaskHandleBT);
   };
+
   void onDisconnect(BLEServer* pServer) {
-    Serial.println("Device Disonnected");
     deviceConnected = false;
+    vTaskSuspend(TaskHandleBT);
+    delay(10);
+    Serial.println("Device Disonnected");
     pServer->getAdvertising()->start();
+    vTaskResume(TaskHandleBMS2);
   }
 };
 
@@ -51,34 +56,13 @@ class UartTxBMSCallback : public BLECharacteristicCallbacks
     }
 };
 
-void loopBT(){
-    if(deviceConnected) {
-        int uartBytesAvailable = Serial1.available();
-        if (uartBytesAvailable)
-        {
-            if (pServer->getConnectedCount() > 0) {
-                // allow uart buffer to accumulate (don't send byte by byte)
-                if (uartBytesAvailable == 1) {
-                    delay(50);
-                    uartBytesAvailable = Serial1.available();
-                }
-
-                const size_t sizeSerial1Read = Serial1.readBytes(Serial1ReadBuffer, min(Serial1_BUF_SIZE_MAX, uartBytesAvailable));
-                pRxCharacteristic->setValue(Serial1ReadBuffer, sizeSerial1Read);
-                pRxCharacteristic->notify(); // may use indicate instead but that will require client to send ack
-            } else {
-                // Discard UART data if no connection
-                while (Serial1.available())
-                {
-                    Serial1.read();
-                }
-            }
-        }
-    }
+void MyBluetooth::initBT() {
+    TaskHandleBMS2 = xTaskGetHandle("TaskHandleBMS");
+    xTaskCreate( taskCallbackBT, "TaskHandleBT", 10000, NULL, 2, &TaskHandleBT );
 }
 
-bool initBT() {
-    Serial.println("INIT BT - START");
+void MyBluetooth::setupBT() {
+    Serial.println("INIT BT - START"); 
     
     BLEDevice::init("SoulOFBMS-BLE");
     pServer = BLEDevice::createServer();
@@ -101,7 +85,40 @@ bool initBT() {
     pAdvertising->setMinPreferred(0x12);
     BLEDevice::startAdvertising();
 
-
     Serial.println("INIT BT - DONE");
-    return true;
+    vTaskSuspend(TaskHandleBT);
+}
+
+void MyBluetooth::loopBT(){
+    if(deviceConnected) {
+        int uartBytesAvailable = Serial1.available();
+        if (uartBytesAvailable) {
+            if (pServer->getConnectedCount() > 0) {
+                // allow uart buffer to accumulate (don't send byte by byte)
+                if (uartBytesAvailable == 1) {
+                    delay(50);
+                    uartBytesAvailable = Serial1.available();
+                }
+
+                const size_t sizeSerial1Read = Serial1.readBytes(Serial1ReadBuffer, min(Serial1_BUF_SIZE_MAX, uartBytesAvailable));
+                pRxCharacteristic->setValue(Serial1ReadBuffer, sizeSerial1Read);
+                pRxCharacteristic->notify(); // may use indicate instead but that will require client to send ack
+            } else {
+                // Discard UART data if no connection
+                while (Serial1.available())
+                {
+                    Serial1.read();
+                }
+            }
+        }
+    } 
+}
+
+void MyBluetooth::taskCallbackBT( void * pvParameters ) {
+    setupBT();
+
+    for( ;; )
+    {
+        loopBT();
+    }
 }

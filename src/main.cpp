@@ -1,3 +1,4 @@
+#define FEATURE_BT
 
 #include <Arduino.h>
 
@@ -7,28 +8,22 @@
 #include "bluetooth.h"
 #include "bms.h"
 
+MyBMS::shared_bms_data_t myBMSData;
+
 void setup() {
-    
-    initSERIAL();
-    initI2C();
-    initBMS();
-    initBT();
-    initRTC();
-    initSD();
-    initOLED();
-    initEPAPER();
-    
+    MyHelper::initHelper(&myBMSData);
+    MyLogger::initLogger(&myBMSData);
+    MyDisplays::initDisplays(&myBMSData);
+    MyBMS::initBMS(&myBMSData);
+    #ifdef FEATURE_BT
+        MyBluetooth::initBT();
+    #endif
+
     delay(1000);
     Serial.println("Finished setup");
     Serial.println("-------------------------------");
 }
 
 void loop() {
-    bool test = getDeviceConnected();
-    loopBT();
-    if (!test) {
-        printRTC();
-        printBMSStatus();
-        delay(1000);
-    }
+    
 }

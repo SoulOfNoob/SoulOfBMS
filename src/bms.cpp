@@ -1,79 +1,73 @@
 #include "bms.h"
 
+TaskHandle_t TaskHandleBMS;
+
 JbdBms jbdbms = JbdBms();
 
-bool initBMS() {
-    Serial1.begin(9600, SERIAL_8N1, BMS_RX_PIN, BMS_TX_PIN);
-    return true;
+MyBMS::shared_bms_data_t *MyBMS::_myBMSData;
+
+void MyBMS::initBMS(shared_bms_data_t *myBMSData) {
+    _myBMSData = myBMSData;
+    xTaskCreate( taskCallbackBMS, "TaskHandleBMS", 10000, NULL, 1, &TaskHandleBMS );
 }
 
-void printBMSStatus() {
-    JbdBms::Hardware_t hardwareStatus;
-    JbdBms::Cells_t cellStatus;
-    JbdBms::Status_t bmsStatus;
+void MyBMS::readBMSStatus() {
+    if (!jbdbms.getHardware(_myBMSData->hardware)) {
+        Serial.println("jbdbms.getHardware() failed");
+    }
     
-    float avgCellVolt = 0;
-
-    // Serial.println("getHardware(): ");
-    // if (jbdbms.getHardware(hardwareStatus)) {
-    //     Serial.printf("Hardware ID: %u\n", hardwareStatus.id);
-    // } else {
-    //     Serial.println("jbdbms.getHardware() failed");
-    // }
-
-    //Serial.println("getCells(): ");
-    if (jbdbms.getCells(cellStatus)) {
-        for (size_t i = 0; i < 6; i++)
-        {
-            avgCellVolt += float(cellStatus.voltages[i]);
-        }
-        avgCellVolt = avgCellVolt / 6 / 1000;
-    } else {
+    if (!jbdbms.getCells(_myBMSData->cells)) {
         Serial.println("jbdbms.getCells() failed");
-    }
-
-    //Serial.println("getStatus(): ");
-    if (jbdbms.getStatus(bmsStatus)/* && jbdbms.getCells(cellStatus)*/) {
-        float V = float(bmsStatus.voltage) / 100; // convert mV to V
-        float A = float(bmsStatus.current) / 100 * -1; // convert mA to A
-        // ToDo: Ugly!, find other way
-        A+= 0.000001; // avoid -0.00A
-        float W = V * (A);
-
-        // oled.clearDisplay();
-
-        // oled.setTextSize(1);
-        // oled.setTextColor(WHITE);
-        // oled.setCursor(0, 10);
-    
-
-        if(A < -0.02) {
-            Serial.println("Charging");
-            // oled.println("Charging");
-        } else if (A > 0.02) {
-            Serial.println("Discharging");
-            // oled.println("Discharging");
-        } else {
-            Serial.println("Idle");
-            // oled.println("Idle");
-        }
-
-        // oled.printf("V: %.2fV (%.2fV)\n", V, avgCellVolt);
-        // oled.printf("A: %.2fA (%.2fW)\n", A, W);
-        // oled.printf("Temp: %.1fC | %.1fC\n", float(bmsStatus.temperatures[0].lo)/10, float(bmsStatus.temperatures[1].lo)/10);
-
-        Serial.printf("V: %.2fV (%.2fV)\n", V, avgCellVolt);
-        Serial.printf("A: %.2fA\n", A);
-        Serial.printf("W: %.2fW\n", W);
-        Serial.printf("Fault: %u\n", bmsStatus.fault);
-        Serial.printf("Mosfet: %u\n", bmsStatus.mosfetStatus);
-        Serial.println("--------------------");
-        Serial.printf("Temp: %.1fC | %.1fC\n", float(bmsStatus.temperatures[0].lo)/10, float(bmsStatus.temperatures[1].lo)/10);
-        Serial.println("--------------------");
-
-        // oled.display(); 
     } else {
-        Serial.println("jbdbms.getStatus() failed");
+        float avgCellVolt = 0;
+        for (size_t i = 0; i < 6; i++) {
+            avgCellVolt += float(_myBMSData->cells.voltages[i]);
+        }
+        _myBMSData->avgCellVolt = avgCellVolt / 6 / 1000;
     }
-    delay(1000);
+
+    if (!jbdbms.getStatus(_myBMSData->status)) {
+        Serial.println("jbdbms.getStatus() failed");
+    } else {
+        _myBMSData->V = float(_myBMSData->status.voltage) / 100; // convert mV to V
+        _myBMSData->A = float(_myBMSData->status.current) / 100 * -1; // convert mA to A
+        // ToDo: Ugly!, find other way
+        _myBMSData->A+= 0.000001; // avoid -0.00A
+        _myBMSData->W = _myBMSData->V * (_myBMSData->A);
+
+        if(_myBMSData->A < -0.02) {
+            _myBMSData->charging_state = "Charging";
+        } else if (_myBMSData->A > 0.02) {
+            _myBMSData->charging_state = "Discharging";
+        } else {
+            _myBMSData->charging_state = "Idle";
+        }
+    }
+}
+
+void MyBMS::printBMSStatus() {
+    Serial.println(_myBMSData->charging_state);
+    Serial.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
+    Serial.printf("A: %.2fA\n", _myBMSData->A);
+    Serial.printf("W: %.2fW\n", _myBMSData->W);
+    Serial.printf("Fault: %u\n", _myBMSData->status.fault);
+    Serial.printf("Mosfet: %u\n", _myBMSData->status.mosfetStatus);
+    Serial.println("--------------------");
+    Serial.printf("Temp: %.1fC | %.1fC\n", float(_myBMSData->status.temperatures[0].lo)/10, float(_myBMSData->status.temperatures[1].lo)/10);
+    Serial.println("--------------------");
+}
+
+void MyBMS::taskCallbackBMS( void * pvParameters ) {
+    Serial1.begin(9600, SERIAL_8N1, BMS_RX_PIN, BMS_TX_PIN);
+
+    TickType_t xLastWakeTime;
+    const TickType_t xFrequency = TASK_INTERVAL_BMS / portTICK_PERIOD_MS;
+    xLastWakeTime = xTaskGetTickCount ();
+    for( ;; )
+    {
+        readBMSStatus();
+        printBMSStatus();
+
+        vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    }
 }

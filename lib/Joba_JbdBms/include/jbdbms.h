@@ -42,7 +42,7 @@ b  A-|-----|A-        DI|-----|B2         A2|-----|RX2       |
 d  B+|-----|B+ MAX485 RO|-----|B1 TXB0108 A1|-----|TX2 ESP32 |    _________     ____
 b    |     |         VCC|-----|VCCB     VCCA|--+--|3.3V   TX1|---|RX  USB- |   | PC |
 m    |     |_________GND|--+--|GND________OE|--+  |       RX1|---|TX Serial|===|USB |
-s____|                     +--------------------+-|GND____Vin|---|VCC      |   |____|
+s____|                     +----------------------+-|GND____Vin|---|VCC      |   |____|
                                                 +----------------|GND______|
 
 Author: Joachim.Banzhaf@gmail.com
@@ -57,6 +57,7 @@ License: GPL V2
 
 class JbdBms {
 public:
+
     // Datatypes used by the device
 
     typedef enum direction { READ=0xa5, WRITE=0x5a } direction_t;
@@ -130,6 +131,7 @@ public:
     // Return true if header and command are written and result and header are read successfully
     bool execute( request_header_t &header, uint8_t *command, uint8_t *result );
 
+    void hex( const char *label, const uint8_t *data );
 
     // Commands. Return true if execute() was successful
 

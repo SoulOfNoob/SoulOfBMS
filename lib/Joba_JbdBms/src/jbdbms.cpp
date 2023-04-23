@@ -3,12 +3,13 @@
 
 // Debug
 
-static void hex( const char *label, const uint8_t *data, size_t length ) {
-    //Serial.printf("%s:", label);
+void JbdBms::hex( const char *label, const uint8_t *data ) {
+    size_t length = sizeof(data);
+    Serial.print(label);
     while( length-- ) {
-        //Serial.printf(" %02x", *(data++));
+        Serial.printf("%02X ", *(data++));
     }
-    //Serial.println();
+    Serial.println();
 }
 
 
@@ -47,11 +48,23 @@ bool JbdBms::execute( request_header_t &header, uint8_t *command, uint8_t *resul
     }
 
     Serial1.flush();  // make sure read buffer is empty
-    bool rc = (Serial1.write((uint8_t *)&header, sizeof(header)) == sizeof(header))
+    bool rc = (Serial1.write((uint8_t *)&header, sizeof(header)) == sizeof(header)) // 
            && (Serial1.write(command, header.length) == header.length)
            && (Serial1.write((uint8_t *)&crc, sizeof(crc)) == sizeof(crc))
            && (Serial1.write(&stop, sizeof(stop)) == sizeof(stop));
     Serial1.flush();  // wait until write is done 
+    
+    // // DEBUG
+    // Serial.println("SENT HEX TO BMS: ");
+    // Serial.flush();  // make sure read buffer is empty
+    // hex("Header:  ", (uint8_t *)&header);
+    // hex("Command: ", (uint8_t *)&command);
+    // hex("CRC:     ", (uint8_t *)&crc);
+    // hex("STOP:    ", (uint8_t *)&stop);
+    // Serial.flush();  // wait until write is done 
+    // Serial.println();
+    // Serial.println("--------------------");
+    // // DEBUG
 
     if( _dir_pin >= 0 ) {
         digitalWrite(_dir_pin, LOW);  // read mode (default)
@@ -66,13 +79,29 @@ bool JbdBms::execute( request_header_t &header, uint8_t *command, uint8_t *resul
           && (Serial1.readBytes(&stop, sizeof(stop)) == sizeof(stop))
           && isValid(header, result, crc)
           && header.returncode == 0;
+
+        // // DEBUG
+        // Serial.println("READ HEX FROM BMS: ");
+        // Serial.flush();  // make sure read buffer is empty
+        // uint8_t *header_hex_2 = (uint8_t *)&header;
+        // uint8_t *crc_hex_2 = (uint8_t *)&crc;
+        // hex("Header:  ", (uint8_t *)&header);
+        // hex("Result:  ", (uint8_t *)&result);
+        // hex("CRC:     ", (uint8_t *)&crc);
+        // hex("STOP:    ", (uint8_t *)&stop);
+        // Serial.flush();  // wait until write is done 
+        // Serial.println();
+        // Serial.println("--------------------");
+        // // DEBUG
+
+        // pCharacteristicTx->setValue(header);
+        // pCharacteristicTx->notify();
     }
 
     *_prev = millis();
 
     return rc;
 }
-
 
 // public Get-Commands
 

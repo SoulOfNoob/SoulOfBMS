@@ -1,11 +1,20 @@
 #include "display.h"
 
-TaskHandle_t Task1;
+TaskHandle_t TaskHandleOLED;
+TaskHandle_t TaskHandleEPAPER;
 
 Adafruit_SSD1306 oled(128, 64, &Wire, -1);
 GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> epaper(GxEPD2_213_BN(SS, 17, 16, 4));
 
-bool initOLED() {
+MyBMS::shared_bms_data_t *MyDisplays::_myBMSData;
+
+void MyDisplays::initDisplays(MyBMS::shared_bms_data_t *myBMSData) {
+    _myBMSData = myBMSData;
+    xTaskCreate( taskCallbackOLED, "TaskHandleOLED", 10000, NULL, 1, &TaskHandleOLED );
+    xTaskCreate( taskCallbackEPAPER, "TaskHandleEPAPER", 10000, NULL, 1, &TaskHandleEPAPER );
+}
+
+void MyDisplays::initOLED() {
     Serial.println("INIT OLED - START");
     if(!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
         Serial.println(F("SSD1306 allocation failed"));
@@ -14,22 +23,19 @@ bool initOLED() {
     oled.clearDisplay();
     oled.setTextSize(1);
     oled.setTextColor(WHITE);
-    oled.setCursor(0, 10);
-    oled.println("Hello BMS");
-    oled.println("Lorem ipsum");
-    oled.println("dolor");
-    oled.println("sit amet.");
-    oled.println("Hello BMS");
     oled.display();
     Serial.println("INIT OLED - DONE");
-    return true;
 }
-bool initEPAPER() {
-    xTaskCreatePinnedToCore( initEPAPERTask, "Task1", 10000, NULL, 0, &Task1, 0);
-    return true;
+void MyDisplays::initEPAPER() {
+    Serial.println("INIT EPAPER - START");
+    epaper.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+    epaperHelloWorld();
+    epaper.hibernate();
+    Serial.println("epaper hibernating");
+    Serial.println("INIT EPAPER - DONE");
 }
 
-void epaperHelloWorld() {
+void MyDisplays::epaperHelloWorld() {
     const char HelloWorld[] = "Hello BMS!";
 
     epaper.setRotation(1);
@@ -57,13 +63,43 @@ void epaperHelloWorld() {
     Serial.println("helloWorld done");
 }
 
-void initEPAPERTask( void * pvParameters ) {
-    Serial.println("INIT EPAPER - START");
-    epaper.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
-    epaperHelloWorld();
-    epaper.hibernate();
-    Serial.println("epaper hibernating");
-    delay(2000);
-    Serial.println("INIT EPAPER - DONE");
-    vTaskDelete(Task1);
+void MyDisplays::updateOLED() {
+    oled.clearDisplay();
+    oled.setTextSize(1);
+    oled.setTextColor(WHITE);
+    oled.setCursor(0, 10);
+    oled.println(_myBMSData->charging_state);
+    oled.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
+    oled.printf("A: %.2fA (%.2fW)\n", _myBMSData->A, _myBMSData->W);
+    oled.printf("Temp: %.1fC | %.1fC\n", float(_myBMSData->status.temperatures[0].lo)/10, float(_myBMSData->status.temperatures[1].lo)/10);
+    oled.println(_myBMSData->rtc_date);
+    oled.display(); 
+}
+
+void MyDisplays::updateEPAPER() {
+    
+}
+
+void MyDisplays::taskCallbackOLED( void * pvParameters ) {
+    initOLED();
+    TickType_t xLastWakeTime;
+    const TickType_t xFrequency = TASK_INTERVAL_OLED / portTICK_PERIOD_MS;
+    xLastWakeTime = xTaskGetTickCount ();
+    for( ;; )
+    {
+        updateOLED();
+        vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    }
+}
+
+void MyDisplays::taskCallbackEPAPER( void * pvParameters ) {
+    initEPAPER();
+    TickType_t xLastWakeTime;
+    const TickType_t xFrequency = TASK_INTERVAL_EPAPER / portTICK_PERIOD_MS;
+    xLastWakeTime = xTaskGetTickCount ();
+    for( ;; )
+    {
+        updateEPAPER();
+        vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    }
 }
