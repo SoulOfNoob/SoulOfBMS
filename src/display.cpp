@@ -6,7 +6,7 @@ Adafruit_SSD1306 oled(128, 64, &Wire, -1);
 GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> epaper(GxEPD2_213_BN(SS, 17, 16, 4));
 
 bool initOLED() {
-    Serial.println("INIT OLED - Start");
+    Serial.println("INIT OLED - START");
     if(!oled.begin(SSD1306_SWITCHCAPVCC, 0x3C)) {
         Serial.println(F("SSD1306 allocation failed"));
         for(;;);
@@ -15,6 +15,10 @@ bool initOLED() {
     oled.setTextSize(1);
     oled.setTextColor(WHITE);
     oled.setCursor(0, 10);
+    oled.println("Hello BMS");
+    oled.println("Lorem ipsum");
+    oled.println("dolor");
+    oled.println("sit amet.");
     oled.println("Hello BMS");
     oled.display();
     Serial.println("INIT OLED - DONE");
@@ -54,7 +58,7 @@ void epaperHelloWorld() {
 }
 
 void initEPAPERTask( void * pvParameters ) {
-    Serial.println("INIT EPAPER - Start");
+    Serial.println("INIT EPAPER - START");
     epaper.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
     epaperHelloWorld();
     epaper.hibernate();

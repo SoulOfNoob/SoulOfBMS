@@ -8,11 +8,20 @@ bool initBMS() {
 }
 
 void printBMSStatus() {
-    JbdBms::Status_t bmsStatus;
+    JbdBms::Hardware_t hardwareStatus;
     JbdBms::Cells_t cellStatus;
-
+    JbdBms::Status_t bmsStatus;
+    
     float avgCellVolt = 0;
 
+    // Serial.println("getHardware(): ");
+    // if (jbdbms.getHardware(hardwareStatus)) {
+    //     Serial.printf("Hardware ID: %u\n", hardwareStatus.id);
+    // } else {
+    //     Serial.println("jbdbms.getHardware() failed");
+    // }
+
+    //Serial.println("getCells(): ");
     if (jbdbms.getCells(cellStatus)) {
         for (size_t i = 0; i < 6; i++)
         {
@@ -22,7 +31,8 @@ void printBMSStatus() {
     } else {
         Serial.println("jbdbms.getCells() failed");
     }
-    
+
+    //Serial.println("getStatus(): ");
     if (jbdbms.getStatus(bmsStatus)/* && jbdbms.getCells(cellStatus)*/) {
         float V = float(bmsStatus.voltage) / 100; // convert mV to V
         float A = float(bmsStatus.current) / 100 * -1; // convert mA to A
@@ -57,12 +67,13 @@ void printBMSStatus() {
         Serial.printf("W: %.2fW\n", W);
         Serial.printf("Fault: %u\n", bmsStatus.fault);
         Serial.printf("Mosfet: %u\n", bmsStatus.mosfetStatus);
-        Serial.println("------------------");
+        Serial.println("--------------------");
         Serial.printf("Temp: %.1fC | %.1fC\n", float(bmsStatus.temperatures[0].lo)/10, float(bmsStatus.temperatures[1].lo)/10);
-        Serial.println("------------------");
+        Serial.println("--------------------");
 
         // oled.display(); 
     } else {
         Serial.println("jbdbms.getStatus() failed");
     }
+    delay(1000);
 }

@@ -4,24 +4,31 @@
 #include "helper.h"
 #include "logging.h"
 #include "display.h"
+#include "bluetooth.h"
 #include "bms.h"
 
 void setup() {
+    
     initSERIAL();
     initI2C();
+    initBMS();
+    initBT();
     initRTC();
     initSD();
-    initBMS();
     initOLED();
     initEPAPER();
-
-    delay(2000);
+    
+    delay(1000);
     Serial.println("Finished setup");
-    Serial.println("-----------------------------");
+    Serial.println("-------------------------------");
 }
 
 void loop() {
-    printRTC();
-    printBMSStatus();
-    delay(1000);
+    bool test = getDeviceConnected();
+    loopBT();
+    if (!test) {
+        printRTC();
+        printBMSStatus();
+        delay(1000);
+    }
 }

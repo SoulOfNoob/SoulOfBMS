@@ -34,5 +34,5 @@ void printRTC() {
         myRTC.getMinute(), 
         myRTC.getSecond()
     );
-    Serial.println("------------------");
+    Serial.println("--------------------");
 }
