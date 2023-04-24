@@ -69,6 +69,7 @@ void MyDisplays::updateOLED() {
     oled.setTextColor(WHITE);
     oled.setCursor(0, 10);
     oled.println(_myBMSData->charging_state);
+    oled.printf("Remaining Cap: %u%%\n", _myBMSData->status.currentCapacity);
     oled.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
     oled.printf("A: %.2fA (%.2fW)\n", _myBMSData->A, _myBMSData->W);
     oled.printf("Temp: %.1fC | %.1fC\n", float(_myBMSData->status.temperatures[0].lo)/10, float(_myBMSData->status.temperatures[1].lo)/10);
