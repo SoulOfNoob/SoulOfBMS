@@ -1,7 +1,23 @@
 # States
 
+## Main
+
+    - Initialize
+      - init Helper
+      - init Displays
+      - init BMS
+      - init BT
+    - Transition in
+      - 
+    - Running
+      - 
+    - Transition out
+      - Hibernate (Final)
+
 ## OLED
 
+    - Initialize
+      - Create OLED task
     - Transition in
       - Clear display
       - Set cursor
@@ -16,17 +32,22 @@
 
 ## Logger
 
+    - Initialize
+      - Create Logger task
     - Transition in
       - Resume Logger task
     - Running
       - Wait for Update notification
         - Read RTC
-        - Write Update to File
+        - If enough time since last log
+          - Write Update to File
     - Transition out
       - Suspend Logger task
 
 ## Bluetooth
 
+    - Initialize
+      - Create BT task
     - Transition in
       - Suspend BMS task
       - Resume BT task
@@ -38,11 +59,15 @@
 
 ## BMS
 
+    - Initialize
+      - Create BMS task
     - Transition in
       - Resume BMS task
     - Running
       - Read BMS values
+      - Lock memory
       - Write BMS values to memory
+      - Unlock memory
       - Notify OLED
       - Notify Logger
       - Wait for next execution
@@ -51,6 +76,8 @@
 
 ## EPAPER
 
+    - Initialize
+      - Create EPAPER task
     - Transition in
       - Resume EPAPER task
     - Running
