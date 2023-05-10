@@ -9,6 +9,7 @@
 
     // ePaper Libs
     #include <GxEPD2_BW.h>
+    #include <Fonts/FreeMonoBold12pt7b.h>
     #include <Fonts/FreeMonoBold9pt7b.h>
 
     #include "bms.h"

@@ -36,13 +36,14 @@ void MyDisplays::initEPAPER() {
 }
 
 void MyDisplays::epaperHelloWorld() {
-    const char HelloWorld[] = "Hello BMS!";
+    const char headline[] = "Viva el botellon!";
+    const char subline[] = "I'm not a bomb, \n i swear'";
 
-    epaper.setRotation(1);
-    epaper.setFont(&FreeMonoBold9pt7b);
+    epaper.setRotation(3);
+    epaper.setFont(&FreeMonoBold12pt7b);
     epaper.setTextColor(GxEPD_BLACK);
     int16_t tbx, tby; uint16_t tbw, tbh;
-    epaper.getTextBounds(HelloWorld, 0, 0, &tbx, &tby, &tbw, &tbh);
+    epaper.getTextBounds(headline, 0, 0, &tbx, &tby, &tbw, &tbh);
     // center bounding box by transposition of origin:
     uint16_t x = ((epaper.width() - tbw) / 2) - tbx;
     uint16_t y = ((epaper.height() - tbh) / 2) - tby;
@@ -50,17 +51,22 @@ void MyDisplays::epaperHelloWorld() {
     // full window mode is the initial mode, set it anyway
     epaper.setFullWindow();
     epaper.fillScreen(GxEPD_WHITE);
-    epaper.drawRect(0, 0, epaper.width(), epaper.height(), GxEPD_BLACK);
-    epaper.drawLine(0, 0, epaper.width(), epaper.height(), GxEPD_BLACK);
-    epaper.drawLine(0, epaper.height(), epaper.width(), 0, GxEPD_BLACK);
-    int margin = 50;
-    epaper.fillRect(margin, margin, epaper.width()-margin*2, epaper.height()-margin*2, GxEPD_WHITE);
-    epaper.drawRect(margin, margin, epaper.width()-margin*2, epaper.height()-margin*2, GxEPD_BLACK);
-    epaper.setCursor(x, y);
-    epaper.print(HelloWorld);
+    // epaper.drawRect(0, 0, epaper.width(), epaper.height(), GxEPD_BLACK);
+    // epaper.drawLine(0, 0, epaper.width(), epaper.height(), GxEPD_BLACK);
+    // epaper.drawLine(0, epaper.height(), epaper.width(), 0, GxEPD_BLACK);
+    // int margin = 50;
+    // epaper.fillRect(margin, margin, epaper.width()-margin*2, epaper.height()-margin*2, GxEPD_WHITE);
+    // epaper.drawRect(margin, margin, epaper.width()-margin*2, epaper.height()-margin*2, GxEPD_BLACK);
+    epaper.setCursor(x, y-30);
+    epaper.print(headline);
+
+    epaper.setFont(&FreeMonoBold9pt7b);
+    epaper.setCursor(x, y+25);
+    epaper.print(subline);
+
     Serial.println("pre display");
     epaper.display(false); // full update
-    Serial.println("helloWorld done");
+    Serial.println("headline done");
 }
 
 void MyDisplays::updateOLED() {
@@ -69,11 +75,12 @@ void MyDisplays::updateOLED() {
     oled.setTextColor(WHITE);
     oled.setCursor(0, 10);
     oled.println(_myBMSData->charging_state);
-    oled.printf("Remaining Cap: %u%%\n", _myBMSData->status.currentCapacity);
+    oled.printf("Remaining: %u%%\n", _myBMSData->status.currentCapacity);
+    oled.printf("Time Left: %.2fh\n", _myBMSData->remaining_time_h_cur);
     oled.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
     oled.printf("A: %.2fA (%.2fW)\n", _myBMSData->A, _myBMSData->W);
     oled.printf("Temp: %.1fC | %.1fC\n", float(_myBMSData->status.temperatures[0].lo)/10, float(_myBMSData->status.temperatures[1].lo)/10);
-    oled.println(_myBMSData->rtc_date);
+    //oled.println(_myBMSData->rtc_date);
     oled.display(); 
 }
 

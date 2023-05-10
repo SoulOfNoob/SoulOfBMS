@@ -12,7 +12,7 @@ MyBMS::shared_bms_data_t myBMSData;
 
 void setup() {
     MyHelper::initHelper(&myBMSData);
-    MyLogger::initLogger(&myBMSData);
+    //MyLogger::initLogger(&myBMSData);
     MyDisplays::initDisplays(&myBMSData);
     MyBMS::initBMS(&myBMSData);
     #ifdef FEATURE_BT

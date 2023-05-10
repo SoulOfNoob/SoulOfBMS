@@ -42,11 +42,20 @@ void MyBMS::readBMSStatus() {
         } else {
             _myBMSData->charging_state = "Idle";
         }
+        if (_myBMSData->charging_state != "Idle") {
+            float remaining_capacity_Ah = float(_myBMSData->status.remainingCapacity) / 100;
+            float remaining_capacity_Wh = remaining_capacity_Ah * _myBMSData->V;
+
+            _myBMSData->remaining_time_h_cur = remaining_capacity_Wh / _myBMSData->W;
+        } else {
+            _myBMSData->remaining_time_h_cur = 0;
+        }
     }
 }
 
 void MyBMS::printBMSStatus() {
     Serial.println(_myBMSData->charging_state);
+    Serial.println(_myBMSData->remaining_time_h_cur);
     Serial.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
     Serial.printf("A: %.2fA\n", _myBMSData->A);
     Serial.printf("W: %.2fW\n", _myBMSData->W);
