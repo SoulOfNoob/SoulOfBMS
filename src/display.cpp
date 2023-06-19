@@ -36,10 +36,10 @@ void MyDisplays::initEPAPER() {
 }
 
 void MyDisplays::epaperHelloWorld() {
-    const char headline[] = "Viva el botellon!";
-    const char subline[] = "I'm not a bomb, \n i swear'";
+    const char headline[] = "Defqon.1";
+    const char subline[] = "Team PowerRadler";
 
-    epaper.setRotation(3);
+    epaper.setRotation(1);
     epaper.setFont(&FreeMonoBold12pt7b);
     epaper.setTextColor(GxEPD_BLACK);
     int16_t tbx, tby; uint16_t tbw, tbh;
@@ -57,11 +57,11 @@ void MyDisplays::epaperHelloWorld() {
     // int margin = 50;
     // epaper.fillRect(margin, margin, epaper.width()-margin*2, epaper.height()-margin*2, GxEPD_WHITE);
     // epaper.drawRect(margin, margin, epaper.width()-margin*2, epaper.height()-margin*2, GxEPD_BLACK);
-    epaper.setCursor(x, y-30);
+    epaper.setCursor(x-70, y-50);
     epaper.print(headline);
 
     epaper.setFont(&FreeMonoBold9pt7b);
-    epaper.setCursor(x, y+25);
+    epaper.setCursor(x-70, y-30);
     epaper.print(subline);
 
     Serial.println("pre display");
