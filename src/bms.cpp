@@ -29,6 +29,9 @@ void MyBMS::readBMSStatus() {
     if (!jbdbms.getStatus(_myBMSData->status)) {
         Serial.println("jbdbms.getStatus() failed");
     } else {
+        _myBMSData->temp_01 = JbdBms::deciCelsius(_myBMSData->status.temperatures[0]) / 10;
+        _myBMSData->temp_02 = JbdBms::deciCelsius(_myBMSData->status.temperatures[1]) / 10;
+
         _myBMSData->V = float(_myBMSData->status.voltage) / 100; // convert mV to V
         _myBMSData->A = float(_myBMSData->status.current) / 100 * -1; // convert mA to A
         // ToDo: Ugly!, find other way
@@ -62,7 +65,7 @@ void MyBMS::printBMSStatus() {
     Serial.printf("Fault: %u\n", _myBMSData->status.fault);
     Serial.printf("Mosfet: %u\n", _myBMSData->status.mosfetStatus);
     Serial.println("--------------------");
-    Serial.printf("Temp: %.1fC | %.1fC\n", float(_myBMSData->status.temperatures[0].lo)/10, float(_myBMSData->status.temperatures[1].lo)/10);
+    Serial.printf("Temp: %.1fC | %.1fC\n", _myBMSData->temp_01, _myBMSData->temp_02);
     Serial.println("--------------------");
 }
 

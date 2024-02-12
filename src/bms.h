@@ -22,6 +22,8 @@
                 float W;
                 float remaining_time_h_cur;
                 float remaining_time_h_nom;
+                float temp_01;
+                float temp_02;
             } shared_bms_data_t;
 
             static void initBMS(shared_bms_data_t *myBMSData);

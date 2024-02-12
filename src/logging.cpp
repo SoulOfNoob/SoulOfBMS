@@ -47,6 +47,7 @@ void MyLogger::readRTC() {
 }
 
 void MyLogger::printRTC() {
+    Serial.print("Time: ");
     Serial.println(_myBMSData->rtc_date);
     Serial.println("--------------------");
 }

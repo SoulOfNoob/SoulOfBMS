@@ -14,8 +14,8 @@
 
     #include "bms.h"
 
-    #define TASK_INTERVAL_OLED 500 // 1 sec
-    #define TASK_INTERVAL_EPAPER 1000 * 60 * 5 // 15 min
+    #define TASK_INTERVAL_OLED 1000 * 2 // 2 sec
+    #define TASK_INTERVAL_EPAPER 1000 * 60 * 15 // 15 min
 
     class MyDisplays {
         public:

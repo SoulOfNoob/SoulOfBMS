@@ -8,6 +8,8 @@ GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> epaper(GxEPD2_213_BN(SS, 17, 16,
 
 MyBMS::shared_bms_data_t *MyDisplays::_myBMSData;
 
+int count = 0;
+
 void MyDisplays::initDisplays(MyBMS::shared_bms_data_t *myBMSData) {
     _myBMSData = myBMSData;
     xTaskCreate( taskCallbackOLED, "TaskHandleOLED", 10000, NULL, 1, &TaskHandleOLED );
@@ -79,13 +81,44 @@ void MyDisplays::updateOLED() {
     oled.printf("Time Left: %.2fh\n", _myBMSData->remaining_time_h_cur);
     oled.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
     oled.printf("A: %.2fA (%.2fW)\n", _myBMSData->A, _myBMSData->W);
-    oled.printf("Temp: %.1fC | %.1fC\n", float(_myBMSData->status.temperatures[0].lo)/10, float(_myBMSData->status.temperatures[1].lo)/10);
+    oled.printf("Temp: %.1fC | %.1fC\n", _myBMSData->temp_01, _myBMSData->temp_02);
     //oled.println(_myBMSData->rtc_date);
     oled.display(); 
 }
 
+void printEpaperValue(const char *text, const float value, const char *unit, int16_t y)
+{
+    epaper.setCursor(0, y);
+    epaper.print(text);
+    epaper.print(value);
+    epaper.print(unit);
+}
+
 void MyDisplays::updateEPAPER() {
-    
+    epaper.fillRect(0, 40, epaper.width(), epaper.height()-40, GxEPD_WHITE);
+    epaper.setFont(&FreeMonoBold9pt7b);
+
+    epaper.setCursor(0, 80);    
+    epaper.print("Remaining");
+
+    epaper.setCursor(0, 100);    
+    epaper.print(_myBMSData->status.currentCapacity);       
+    epaper.print("% - ");
+    epaper.print(_myBMSData->remaining_time_h_cur);
+    epaper.print("h (");
+    epaper.print(_myBMSData->W);
+    epaper.print("W)");
+
+    epaper.setCursor(0, 120);
+    epaper.print("Temp: ");
+    epaper.print(_myBMSData->temp_01);
+    epaper.print("°C | ");
+    epaper.print(_myBMSData->temp_02);
+    epaper.print("°C");
+
+    Serial.println("pre display");
+    epaper.display(true); // partial update
+    Serial.println("partial done");
 }
 
 void MyDisplays::taskCallbackOLED( void * pvParameters ) {
