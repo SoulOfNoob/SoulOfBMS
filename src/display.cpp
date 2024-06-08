@@ -82,7 +82,6 @@ void MyDisplays::updateOLED() {
     oled.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
     oled.printf("A: %.2fA (%.2fW)\n", _myBMSData->A, _myBMSData->W);
     oled.printf("Temp: %.1fC | %.1fC\n", _myBMSData->temp_01, _myBMSData->temp_02);
-    //oled.println(_myBMSData->rtc_date);
     oled.display(); 
 }
 

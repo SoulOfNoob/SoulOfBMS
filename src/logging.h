@@ -31,7 +31,9 @@
             static void initRTC();
 
             static void readRTC();
-            static void printRTC();
+            
+            static void printRTCStatusToConsole();
+            static void printBMSStatusToConsole();
 
         private:
             static MyBMS::shared_bms_data_t *_myBMSData;

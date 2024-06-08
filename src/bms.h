@@ -14,7 +14,6 @@
                 JbdBms::Status_t status;
                 JbdBms::Cells_t cells;
                 JbdBms::Hardware_t hardware;
-                String rtc_date;
                 String charging_state;
                 float avgCellVolt;
                 float V;
@@ -22,13 +21,16 @@
                 float W;
                 float remaining_time_h_cur;
                 float remaining_time_h_nom;
+                float remaining_capacity_Ah;
+                float remaining_capacity_Wh;
+                float total_capacity_Ah;
+                float total_capacity_Wh;
                 float temp_01;
                 float temp_02;
             } shared_bms_data_t;
 
             static void initBMS(shared_bms_data_t *myBMSData);
             static void readBMSStatus();
-            static void printBMSStatus();
 
         private:
             static shared_bms_data_t *_myBMSData;

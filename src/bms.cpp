@@ -15,63 +15,46 @@ void MyBMS::initBMS(shared_bms_data_t *myBMSData) {
 }
 
 void MyBMS::readBMSStatus() {
-    if (!jbdbms.getHardware(_myBMSData->hardware)) {
-        Serial.println("jbdbms.getHardware() failed");
+    if(
+        !jbdbms.getHardware(_myBMSData->hardware) ||
+        !jbdbms.getCells(_myBMSData->cells) || 
+        !jbdbms.getStatus(_myBMSData->status)
+    ) {
+        Serial.println("### jbdbms failed exiting ###"); // ToDo Throw error somehow without direct serial print
+        return;
     }
     
-    if (!jbdbms.getCells(_myBMSData->cells)) {
-        Serial.println("jbdbms.getCells() failed");
-    } else {
-        float avgCellVolt = 0;
-        for (size_t i = 0; i < 6; i++) {
-            avgCellVolt += float(_myBMSData->cells.voltages[i]);
-        }
-        _myBMSData->avgCellVolt = avgCellVolt / 6 / 1000;
+    // Process Cells
+    float totalCellVolt = 0;
+    for (size_t i = 0; i < 6; i++) {
+        totalCellVolt += float(_myBMSData->cells.voltages[i]);
     }
+    _myBMSData->avgCellVolt = totalCellVolt / _myBMSData->status.cells / 1000;
 
-    if (!jbdbms.getStatus(_myBMSData->status)) {
-        Serial.println("jbdbms.getStatus() failed");
+    // Process Stauts
+    _myBMSData->temp_01 = JbdBms::deciCelsius(_myBMSData->status.temperatures[0]) / 10;
+    _myBMSData->temp_02 = JbdBms::deciCelsius(_myBMSData->status.temperatures[1]) / 10;
+
+    _myBMSData->V = float(_myBMSData->status.voltage) / 100; // convert mV to V
+    _myBMSData->A = float(_myBMSData->status.current) / 100; // convert mA to A
+    _myBMSData->W = _myBMSData->V * (_myBMSData->A); 
+
+    _myBMSData->remaining_capacity_Ah = float(_myBMSData->status.remainingCapacity) / 100; // remaining capacity as in BMS configured for whole pack
+    _myBMSData->remaining_capacity_Wh = _myBMSData->remaining_capacity_Ah * (_myBMSData->status.cells * NOMINAL_CELL_VOLTAGE);
+
+    _myBMSData->total_capacity_Ah = float(_myBMSData->status.nominalCapacity) / 100; // total capacity as in BMS configured for whole pack
+    _myBMSData->total_capacity_Wh =  _myBMSData->total_capacity_Ah * (_myBMSData->status.cells * NOMINAL_CELL_VOLTAGE);
+
+    if(_myBMSData->A > 0.02) {
+        _myBMSData->charging_state = "Charging";
+        _myBMSData->remaining_time_h_cur = (_myBMSData->total_capacity_Wh - _myBMSData->remaining_capacity_Wh) / _myBMSData->W;
+    } else if (_myBMSData->A < -0.02) {
+        _myBMSData->charging_state = "Discharging";
+        _myBMSData->remaining_time_h_cur = (_myBMSData->remaining_capacity_Wh / _myBMSData->W) * -1;
     } else {
-        _myBMSData->temp_01 = JbdBms::deciCelsius(_myBMSData->status.temperatures[0]) / 10;
-        _myBMSData->temp_02 = JbdBms::deciCelsius(_myBMSData->status.temperatures[1]) / 10;
-
-        _myBMSData->V = float(_myBMSData->status.voltage) / 100; // convert mV to V
-        _myBMSData->A = float(_myBMSData->status.current) / 100 * -1; // convert mA to A
-        // ToDo: Ugly!, find other way
-        _myBMSData->A+= 0.000001; // avoid -0.00A
-        _myBMSData->W = _myBMSData->V * (_myBMSData->A);
-
-        if(_myBMSData->A < -0.02) {
-            _myBMSData->charging_state = "Charging";
-        } else if (_myBMSData->A > 0.02) {
-            _myBMSData->charging_state = "Discharging";
-        } else {
-            _myBMSData->charging_state = "Idle";
-        }
-        if (_myBMSData->charging_state != "Idle") {
-            float remaining_capacity_Ah = float(_myBMSData->status.remainingCapacity) / 100; // remaining capacity as in BMS configured for whole pack
-            float remaining_capacity_Wh = remaining_capacity_Ah * (_myBMSData->status.cells * NOMINAL_CELL_VOLTAGE);
-
-            _myBMSData->remaining_time_h_cur = remaining_capacity_Wh / _myBMSData->W;
-        } else {
-            _myBMSData->remaining_time_h_cur = 0;
-        }
+        _myBMSData->charging_state = "Idle";
+        _myBMSData->remaining_time_h_cur = 0;
     }
-}
-
-// ToDo: move to logging class
-void MyBMS::printBMSStatus() {
-    Serial.println(_myBMSData->charging_state);
-    Serial.println(_myBMSData->remaining_time_h_cur);
-    Serial.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
-    Serial.printf("A: %.2fA\n", _myBMSData->A);
-    Serial.printf("W: %.2fW\n", _myBMSData->W);
-    Serial.printf("Fault: %u\n", _myBMSData->status.fault);
-    Serial.printf("Mosfet: %u\n", _myBMSData->status.mosfetStatus);
-    Serial.printf("Reed: %u\n", digitalRead(13));
-    Serial.println("--------------------");
-    Serial.printf("Temp: %.1fC | %.1fC\n", _myBMSData->temp_01, _myBMSData->temp_02);
-    Serial.println("--------------------");
 }
 
 void MyBMS::taskCallbackBMS( void * pvParameters ) {
@@ -83,7 +66,6 @@ void MyBMS::taskCallbackBMS( void * pvParameters ) {
     for( ;; )
     {
         readBMSStatus();
-        printBMSStatus();
 
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }

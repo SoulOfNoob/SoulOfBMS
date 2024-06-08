@@ -8,6 +8,7 @@ bool h12Flag;
 bool pmFlag;
 
 TaskHandle_t TaskHandleLogger;
+String rtc_date;
 
 MyBMS::shared_bms_data_t *MyLogger::_myBMSData;
 
@@ -26,6 +27,7 @@ void MyLogger::initSD() {
     Serial.println(rlst ? sizeString : "SD:N/A");
     Serial.println("INIT SD - Done");
 }
+
 void MyLogger::initRTC() {
     Serial.println("INIT RTC - Start");
     Serial.println("INIT RTC - Done");
@@ -43,26 +45,46 @@ void MyLogger::readRTC() {
         myRTC.getMinute(), 
         myRTC.getSecond()
     );
-    _myBMSData->rtc_date = buffer;
+    rtc_date = buffer;
 }
 
-void MyLogger::printRTC() {
+void MyLogger::printRTCStatusToConsole() {
     Serial.print("Time: ");
-    Serial.println(_myBMSData->rtc_date);
+    Serial.println(rtc_date);
+    Serial.println("--------------------");
+}
+
+void MyLogger::printBMSStatusToConsole() {
+    Serial.printf("State: %s\n", _myBMSData->charging_state);
+    Serial.printf("Time left: %.2fh\n", _myBMSData->remaining_time_h_cur);
+    Serial.printf("Capacity Left: %.2fAh\n", _myBMSData->remaining_capacity_Ah);
+    Serial.printf("Capacity Left: %.2fWh\n", _myBMSData->remaining_capacity_Wh);
+    Serial.printf("Capacity Total: %.2fAh\n", _myBMSData->total_capacity_Ah);
+    Serial.printf("Capacity Total: %.2fWh\n", _myBMSData->total_capacity_Wh);
+    Serial.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
+    Serial.printf("A: %.2fA\n", _myBMSData->A);
+    Serial.printf("W: %.2fW\n", _myBMSData->W);
+    Serial.printf("Fault: %u\n", _myBMSData->status.fault);
+    Serial.printf("Mosfet: %u\n", _myBMSData->status.mosfetStatus);
+    Serial.printf("Reed: %u\n", digitalRead(13));
+    Serial.println("--------------------");
+    Serial.printf("Temp: %.1fC | %.1fC\n", _myBMSData->temp_01, _myBMSData->temp_02);
     Serial.println("--------------------");
 }
 
 void MyLogger::taskCallbackLogger( void * pvParameters ) {
-    initRTC();
-    initSD();
+    // Serial.begin(115200); // ToDo move to here??
+    // initRTC();
+    // initSD();
 
     TickType_t xLastWakeTime;
     const TickType_t xFrequency = TASK_INTERVAL_LOGGER / portTICK_PERIOD_MS;
     xLastWakeTime = xTaskGetTickCount ();
     for( ;; )
     {
-        readRTC();
-        printRTC();
+        // readRTC();
+        // printRTC();
+        printBMSStatusToConsole();
 
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }
