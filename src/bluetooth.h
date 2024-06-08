@@ -9,6 +9,7 @@
     #include "bms.h"
 
     #define TASK_INTERVAL_BT
+    #define BT_NAME "SoulOfBMS"
 
     class MyBluetooth {
         public:

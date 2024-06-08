@@ -64,7 +64,7 @@ void MyBluetooth::initBT() {
 void MyBluetooth::setupBT() {
     Serial.println("INIT BT - START"); 
     
-    BLEDevice::init("SoulOFBMS-BLE");
+    BLEDevice::init(BT_NAME);
     pServer = BLEDevice::createServer();
     pServer->setCallbacks(new ServerConnectionCallback());
     pService = pServer->createService(SERVICE_UART_UUID);
@@ -101,6 +101,7 @@ void MyBluetooth::loopBT(){
                 }
 
                 const size_t sizeSerial1Read = Serial1.readBytes(Serial1ReadBuffer, min(Serial1_BUF_SIZE_MAX, uartBytesAvailable));
+                // ToDo: pipe data to ReadBMS as well somehow
                 pRxCharacteristic->setValue(Serial1ReadBuffer, sizeSerial1Read);
                 pRxCharacteristic->notify(); // may use indicate instead but that will require client to send ack
             } else {
