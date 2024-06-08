@@ -84,7 +84,7 @@ void MyLogger::taskCallbackLogger( void * pvParameters ) {
     {
         // readRTC();
         // printRTC();
-        // printBMSStatusToConsole();
+        printBMSStatusToConsole();
 
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }
