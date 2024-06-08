@@ -17,26 +17,27 @@ BLECharacteristic *pTxCharacteristic;
 uint8_t *Serial1ReadBuffer = new uint8_t[Serial1_BUF_SIZE_MAX];
 
 TaskHandle_t TaskHandleBT;
-TaskHandle_t TaskHandleBMS2;
+TaskHandle_t _TaskHandleBMS;
 bool deviceConnected = false;
 
 //Setup callbacks onConnect and onDisconnect
 class ServerConnectionCallback: public BLEServerCallbacks {
   void onConnect(BLEServer* pServer) {
     deviceConnected = true;
-    vTaskSuspend(TaskHandleBMS2);
+    vTaskSuspend(_TaskHandleBMS);
     delay(10);
     Serial.println("Device Connected");
     vTaskResume(TaskHandleBT);
   };
 
   void onDisconnect(BLEServer* pServer) {
+    ESP.restart();
     deviceConnected = false;
     vTaskSuspend(TaskHandleBT);
     delay(10);
     Serial.println("Device Disonnected");
     pServer->getAdvertising()->start();
-    vTaskResume(TaskHandleBMS2);
+    vTaskResume(_TaskHandleBMS);
   }
 };
 
@@ -57,7 +58,7 @@ class UartTxBMSCallback : public BLECharacteristicCallbacks
 };
 
 void MyBluetooth::initBT() {
-    TaskHandleBMS2 = xTaskGetHandle("TaskHandleBMS");
+    _TaskHandleBMS = xTaskGetHandle("TaskHandleBMS");
     xTaskCreate( taskCallbackBT, "TaskHandleBT", 10000, NULL, 2, &TaskHandleBT );
 }
 
