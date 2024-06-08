@@ -49,25 +49,23 @@ void MyLogger::readRTC() {
 }
 
 void MyLogger::printRTCStatusToConsole() {
+    Serial.println("------- RTC --------");
     Serial.print("LOOP RTC - Time: ");
     Serial.println(rtc_date);
-    Serial.println("--------------------");
 }
 
 void MyLogger::printBMSStatusToConsole() {
-    Serial.printf("State: %s\n", _myBMSData->charging_state);
-    Serial.printf("Time left: %.2fh\n", _myBMSData->remaining_time_h_cur);
-    Serial.printf("Capacity Left: %.2fAh\n", _myBMSData->remaining_capacity_Ah);
-    Serial.printf("Capacity Left: %.2fWh\n", _myBMSData->remaining_capacity_Wh);
+    Serial.println("------- OLED -------");
+    Serial.printf("%u%% %s\n", _myBMSData->status.currentCapacity, _myBMSData->charging_state.c_str());
+    Serial.printf("Remaining: %.0fWh\n", _myBMSData->remaining_capacity_Wh);
+    Serial.printf("Time Left: %.2fh\n", _myBMSData->remaining_time_h_cur);
+    Serial.printf("A: %.2fA (%.2fW)\n", _myBMSData->A, _myBMSData->W);
     Serial.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
-    Serial.printf("A: %.2fA\n", _myBMSData->A);
-    Serial.printf("W: %.2fW\n", _myBMSData->W);
+    Serial.printf("Temp: %.1fC | %.1fC\n", _myBMSData->temp_01, _myBMSData->temp_02);
+    Serial.println("------- DEBUG ------");
     Serial.printf("Fault: %u\n", _myBMSData->status.fault);
     Serial.printf("Mosfet: %u\n", _myBMSData->status.mosfetStatus);
     Serial.printf("Reed: %u\n", digitalRead(13));
-    Serial.println("--------------------");
-    Serial.printf("Temp: %.1fC | %.1fC\n", _myBMSData->temp_01, _myBMSData->temp_02);
-    Serial.println("--------------------");
 }
 
 void MyLogger::taskCallbackLogger( void * pvParameters ) {

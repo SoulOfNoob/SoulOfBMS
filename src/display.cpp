@@ -68,13 +68,14 @@ void MyDisplays::epaperHelloWorld() {
 void MyDisplays::updateOLED() {
     oled.clearDisplay();
     oled.setTextSize(1);
+    oled.setTextWrap(false);
     oled.setTextColor(WHITE);
     oled.setCursor(0, 10);
-    oled.println(_myBMSData->charging_state);
-    oled.printf("Remaining: %u%%\n", _myBMSData->status.currentCapacity);
+    oled.printf("%u%% %s\n", _myBMSData->status.currentCapacity, _myBMSData->charging_state.c_str());
+    oled.printf("Remaining: %.0fWh\n", _myBMSData->remaining_capacity_Wh);
     oled.printf("Time Left: %.2fh\n", _myBMSData->remaining_time_h_cur);
-    oled.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
     oled.printf("A: %.2fA (%.2fW)\n", _myBMSData->A, _myBMSData->W);
+    oled.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
     oled.printf("Temp: %.1fC | %.1fC\n", _myBMSData->temp_01, _myBMSData->temp_02);
     oled.display(); 
 }
