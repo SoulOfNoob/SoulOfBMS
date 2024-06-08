@@ -31,7 +31,6 @@ class ServerConnectionCallback: public BLEServerCallbacks {
   };
 
   void onDisconnect(BLEServer* pServer) {
-    ESP.restart();
     deviceConnected = false;
     vTaskSuspend(TaskHandleBT);
     delay(10);
