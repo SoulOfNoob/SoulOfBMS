@@ -1,10 +1,13 @@
 #include "bms.h"
 
+#define NOMINAL_CELL_VOLTAGE 3.7
+
 TaskHandle_t TaskHandleBMS;
 
 JbdBms jbdbms = JbdBms();
 
 MyBMS::shared_bms_data_t *MyBMS::_myBMSData;
+
 
 void MyBMS::initBMS(shared_bms_data_t *myBMSData) {
     _myBMSData = myBMSData;
@@ -46,8 +49,8 @@ void MyBMS::readBMSStatus() {
             _myBMSData->charging_state = "Idle";
         }
         if (_myBMSData->charging_state != "Idle") {
-            float remaining_capacity_Ah = float(_myBMSData->status.remainingCapacity) / 100;
-            float remaining_capacity_Wh = remaining_capacity_Ah * _myBMSData->V;
+            float remaining_capacity_Ah = float(_myBMSData->status.remainingCapacity) / 100; // remaining capacity as in BMS configured for whole pack
+            float remaining_capacity_Wh = remaining_capacity_Ah * (_myBMSData->status.cells * NOMINAL_CELL_VOLTAGE);
 
             _myBMSData->remaining_time_h_cur = remaining_capacity_Wh / _myBMSData->W;
         } else {
@@ -56,6 +59,7 @@ void MyBMS::readBMSStatus() {
     }
 }
 
+// ToDo: move to logging class
 void MyBMS::printBMSStatus() {
     Serial.println(_myBMSData->charging_state);
     Serial.println(_myBMSData->remaining_time_h_cur);
@@ -64,6 +68,7 @@ void MyBMS::printBMSStatus() {
     Serial.printf("W: %.2fW\n", _myBMSData->W);
     Serial.printf("Fault: %u\n", _myBMSData->status.fault);
     Serial.printf("Mosfet: %u\n", _myBMSData->status.mosfetStatus);
+    Serial.printf("Reed: %u\n", digitalRead(13));
     Serial.println("--------------------");
     Serial.printf("Temp: %.1fC | %.1fC\n", _myBMSData->temp_01, _myBMSData->temp_02);
     Serial.println("--------------------");

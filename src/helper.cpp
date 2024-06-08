@@ -5,6 +5,7 @@ MyBMS::shared_bms_data_t *MyHelper::_myBMSData;
 void MyHelper::initHelper(MyBMS::shared_bms_data_t *myBMSData) {
     initSERIAL();
     initI2C();
+    pinMode(13, INPUT_PULLUP);
 }
 
 void MyHelper::initSERIAL() {
