@@ -30,16 +30,16 @@ void MyDisplays::initOLED() {
 }
 void MyDisplays::initEPAPER() {
     Serial.println("INIT EPAPER - START");
-    epaper.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+    epaper.init(0, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
     epaperHelloWorld();
     epaper.hibernate();
-    Serial.println("epaper hibernating");
+    Serial.println("INIT EPAPER - Hibernating");
     Serial.println("INIT EPAPER - DONE");
 }
 
 void MyDisplays::epaperHelloWorld() {
     const char headline[] = "Defqon.1";
-    const char subline[] = "Team PowerRadler";
+    const char subline[] = "Camp PokeCenter";
 
     epaper.setRotation(1);
     epaper.setFont(&FreeMonoBold12pt7b);
@@ -53,12 +53,6 @@ void MyDisplays::epaperHelloWorld() {
     // full window mode is the initial mode, set it anyway
     epaper.setFullWindow();
     epaper.fillScreen(GxEPD_WHITE);
-    // epaper.drawRect(0, 0, epaper.width(), epaper.height(), GxEPD_BLACK);
-    // epaper.drawLine(0, 0, epaper.width(), epaper.height(), GxEPD_BLACK);
-    // epaper.drawLine(0, epaper.height(), epaper.width(), 0, GxEPD_BLACK);
-    // int margin = 50;
-    // epaper.fillRect(margin, margin, epaper.width()-margin*2, epaper.height()-margin*2, GxEPD_WHITE);
-    // epaper.drawRect(margin, margin, epaper.width()-margin*2, epaper.height()-margin*2, GxEPD_BLACK);
     epaper.setCursor(x-70, y-50);
     epaper.print(headline);
 
@@ -66,9 +60,9 @@ void MyDisplays::epaperHelloWorld() {
     epaper.setCursor(x-70, y-30);
     epaper.print(subline);
 
-    Serial.println("pre display");
+    Serial.println("LOOP EPAPER - pre display");
     epaper.display(false); // full update
-    Serial.println("headline done");
+    Serial.println("LOOP EPAPER - headline done");
 }
 
 void MyDisplays::updateOLED() {
@@ -83,14 +77,6 @@ void MyDisplays::updateOLED() {
     oled.printf("A: %.2fA (%.2fW)\n", _myBMSData->A, _myBMSData->W);
     oled.printf("Temp: %.1fC | %.1fC\n", _myBMSData->temp_01, _myBMSData->temp_02);
     oled.display(); 
-}
-
-void printEpaperValue(const char *text, const float value, const char *unit, int16_t y)
-{
-    epaper.setCursor(0, y);
-    epaper.print(text);
-    epaper.print(value);
-    epaper.print(unit);
 }
 
 void MyDisplays::updateEPAPER() {
@@ -115,9 +101,9 @@ void MyDisplays::updateEPAPER() {
     epaper.print(_myBMSData->temp_02);
     epaper.print("°C");
 
-    Serial.println("pre display");
+    Serial.println("LOOP EPAPER - pre display");
     epaper.display(true); // partial update
-    Serial.println("partial done");
+    Serial.println("LOOP EPAPER - partial done");
 }
 
 void MyDisplays::taskCallbackOLED( void * pvParameters ) {

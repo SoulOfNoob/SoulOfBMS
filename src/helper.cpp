@@ -10,6 +10,9 @@ void MyHelper::initHelper(MyBMS::shared_bms_data_t *myBMSData) {
 
 void MyHelper::initSERIAL() {
     Serial.begin(115200);
+    Serial.println("INIT SERIAL - START");
+    delay(3000);
+    Serial.println("INIT SERIAL - DONE");
 }
 
 void MyHelper::initI2C() {

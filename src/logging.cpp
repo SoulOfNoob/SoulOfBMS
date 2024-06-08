@@ -23,8 +23,8 @@ void MyLogger::initSD() {
     SDSPI.begin(SDCARD_SCLK, SDCARD_MISO, SDCARD_MOSI);
     bool rlst = SD.begin(SDCARD_CS, SDSPI);
 
-    String sizeString = "SD Size:" + String(SD.cardSize() / 1024.0 / 1024.0 / 1024.0) + "G";
-    Serial.println(rlst ? sizeString : "SD:N/A");
+    String sizeString = "INIT SD - SD Size:" + String(SD.cardSize() / 1024.0 / 1024.0 / 1024.0) + "G";
+    Serial.println(rlst ? sizeString : "INIT SD - SD:N/A");
     Serial.println("INIT SD - Done");
 }
 
@@ -49,7 +49,7 @@ void MyLogger::readRTC() {
 }
 
 void MyLogger::printRTCStatusToConsole() {
-    Serial.print("Time: ");
+    Serial.print("LOOP RTC - Time: ");
     Serial.println(rtc_date);
     Serial.println("--------------------");
 }
@@ -71,9 +71,11 @@ void MyLogger::printBMSStatusToConsole() {
 }
 
 void MyLogger::taskCallbackLogger( void * pvParameters ) {
+    Serial.println("INIT Logger - Start");
     // Serial.begin(115200); // ToDo move to here??
     // initRTC();
-    // initSD();
+    initSD();
+    Serial.println("INIT Logger - Done");
 
     TickType_t xLastWakeTime;
     const TickType_t xFrequency = TASK_INTERVAL_LOGGER / portTICK_PERIOD_MS;
@@ -82,7 +84,7 @@ void MyLogger::taskCallbackLogger( void * pvParameters ) {
     {
         // readRTC();
         // printRTC();
-        printBMSStatusToConsole();
+        // printBMSStatusToConsole();
 
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }
