@@ -59,8 +59,6 @@ void MyLogger::printBMSStatusToConsole() {
     Serial.printf("Time left: %.2fh\n", _myBMSData->remaining_time_h_cur);
     Serial.printf("Capacity Left: %.2fAh\n", _myBMSData->remaining_capacity_Ah);
     Serial.printf("Capacity Left: %.2fWh\n", _myBMSData->remaining_capacity_Wh);
-    Serial.printf("Capacity Total: %.2fAh\n", _myBMSData->total_capacity_Ah);
-    Serial.printf("Capacity Total: %.2fWh\n", _myBMSData->total_capacity_Wh);
     Serial.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
     Serial.printf("A: %.2fA\n", _myBMSData->A);
     Serial.printf("W: %.2fW\n", _myBMSData->W);
