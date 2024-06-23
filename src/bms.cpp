@@ -21,6 +21,12 @@ void IRAM_ATTR BTISR() {
 void MyBMS::initBMS(shared_bms_data_t *myBMSData) {
     _myBMSData = myBMSData;
 
+    pinMode(REED_PIN, INPUT_PULLUP);
+    pinMode(BT_SWITCH_PIN, INPUT_PULLUP);
+
+    _myBMSData->bt_enabled = !digitalRead(BT_SWITCH_PIN);
+    _myBMSData->lid_open = digitalRead(REED_PIN);
+
     attachInterrupt(REED_PIN, LidISR, CHANGE);
     attachInterrupt(BT_SWITCH_PIN, BTISR, CHANGE);
 
@@ -72,11 +78,21 @@ void MyBMS::readBMSStatus() {
 
 void MyBMS::taskUpdateLidState( void * pvParameters ) {
     _myBMSData->lid_open = digitalRead(REED_PIN);
+    if(!_myBMSData->lid_open && !_myBMSData->bt_enabled) {
+        //Go to sleep now
+        Serial.println("Going to sleep now");
+        delay(2000);
+        esp_deep_sleep_start();
+        Serial.println("This will never be printed");
+    }
     vTaskDelete(NULL);
 }
 
 void MyBMS::taskUpdateBTState( void * pvParameters ) {
     _myBMSData->bt_enabled = !digitalRead(BT_SWITCH_PIN);
+    esp_sleep_enable_timer_wakeup(100);
+    esp_deep_sleep_start();
+    //ESP.restart(); // ToDo: init BT on runtime without reboot
     vTaskDelete(NULL);
 }
 
