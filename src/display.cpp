@@ -8,6 +8,8 @@ GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> epaper(GxEPD2_213_BN(SS, 17, 16,
 
 MyBMS::shared_bms_data_t *MyDisplays::_myBMSData;
 
+RTC_DATA_ATTR bool epaper_initialized = false;
+
 const char epaper_headline[] = "Defqon.1";
 const char epaper_subline[] = "Camp PokeCenter";
 
@@ -32,35 +34,38 @@ void MyDisplays::initOLED() {
     Serial.println("INIT OLED - DONE");
 }
 void MyDisplays::initEPAPER() {
-    Serial.println("INIT EPAPER - START");
-    epaper.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
+    if(!epaper_initialized) {
+        Serial.println("INIT EPAPER - START");
+        epaper.init(0, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
 
-    epaper.setRotation(1);
-    epaper.setFont(&FreeMonoBold12pt7b);
-    epaper.setTextColor(GxEPD_BLACK);
-    int16_t tbx, tby; uint16_t tbw, tbh;
-    epaper.getTextBounds(epaper_headline, 0, 0, &tbx, &tby, &tbw, &tbh);
-    // center bounding box by transposition of origin:
-    uint16_t x = ((epaper.width() - tbw) / 2) - tbx;
-    uint16_t y = ((epaper.height() - tbh) / 2) - tby;
-    Serial.printf("width: %u, height: %u", epaper.width(), epaper.height());
-    // full window mode is the initial mode, set it anyway
-    epaper.setFullWindow();
-    epaper.fillScreen(GxEPD_WHITE);
-    epaper.setCursor(x-70, y-50);
-    epaper.print(epaper_headline);
+        epaper.setRotation(1);
+        epaper.setFont(&FreeMonoBold12pt7b);
+        epaper.setTextColor(GxEPD_BLACK);
+        int16_t tbx, tby; uint16_t tbw, tbh;
+        epaper.getTextBounds(epaper_headline, 0, 0, &tbx, &tby, &tbw, &tbh);
+        // center bounding box by transposition of origin:
+        uint16_t x = ((epaper.width() - tbw) / 2) - tbx;
+        uint16_t y = ((epaper.height() - tbh) / 2) - tby;
+        Serial.printf("width: %u, height: %u", epaper.width(), epaper.height());
+        // full window mode is the initial mode, set it anyway
+        epaper.setFullWindow();
+        epaper.fillScreen(GxEPD_WHITE);
+        epaper.setCursor(x-70, y-50);
+        epaper.print(epaper_headline);
 
-    epaper.setFont(&FreeMonoBold9pt7b);
-    epaper.setCursor(x-70, y-30);
-    epaper.print(epaper_subline);
+        epaper.setFont(&FreeMonoBold9pt7b);
+        epaper.setCursor(x-70, y-30);
+        epaper.print(epaper_subline);
 
-    //updateEPAPER(true);
+        //updateEPAPER(true);
 
-    Serial.println("INIT EPAPER - pre display");
-    epaper.display(false); // full update
-    Serial.println("INIT EPAPER - headline done");
-    epaper.hibernate();
-    Serial.println("INIT EPAPER - DONE");
+        Serial.println("INIT EPAPER - pre display");
+        epaper.display(false); // full update
+        Serial.println("INIT EPAPER - headline done");
+        epaper.hibernate();
+        epaper_initialized = true;
+        Serial.println("INIT EPAPER - DONE");
+    }
 }
 
 void MyDisplays::updateOLED() {
