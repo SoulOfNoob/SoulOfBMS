@@ -65,25 +65,28 @@ void MyLogger::printBMSStatusToConsole() {
     Serial.println("------- DEBUG ------");
     Serial.printf("Fault: %u\n", _myBMSData->status.fault);
     Serial.printf("Mosfet: %u\n", _myBMSData->status.mosfetStatus);
-    Serial.printf("Lid Open: %u\n", digitalRead(12));
-    Serial.printf("BT Switch: %u\n", !digitalRead(27));
+    Serial.printf("Lid Open: %u\n", _myBMSData->lid_open);
+    Serial.printf("BT Enabled: %u\n", _myBMSData->bt_enabled);
 }
 
 void MyLogger::taskCallbackLogger( void * pvParameters ) {
+    TickType_t xLastWakeTime = xTaskGetTickCount ();
+    const TickType_t xFrequency = TASK_INTERVAL_LOGGER / portTICK_PERIOD_MS;
+
     Serial.println("INIT Logger - Start");
     // Serial.begin(115200); // ToDo move to here??
     // initRTC();
     initSD();
     Serial.println("INIT Logger - Done");
-
-    TickType_t xLastWakeTime;
-    const TickType_t xFrequency = TASK_INTERVAL_LOGGER / portTICK_PERIOD_MS;
-    xLastWakeTime = xTaskGetTickCount ();
+    
+    
     for( ;; )
     {
         // readRTC();
         // printRTC();
-        printBMSStatusToConsole();
+        if(_myBMSData->lid_open) {
+            printBMSStatusToConsole();
+        }
 
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }

@@ -3,14 +3,27 @@
 #define NOMINAL_CELL_VOLTAGE 3.7
 
 TaskHandle_t TaskHandleBMS;
+TaskHandle_t TaskUpdateLidState;
+TaskHandle_t TaskUpdateBTState;
 
 JbdBms jbdbms = JbdBms();
 
 MyBMS::shared_bms_data_t *MyBMS::_myBMSData;
 
+void IRAM_ATTR LidISR() {
+    xTaskCreate( MyBMS::taskUpdateLidState, "TaskUpdateLidState", 10000, NULL, 2, &TaskUpdateLidState );
+}
+
+void IRAM_ATTR BTISR() {
+    xTaskCreate( MyBMS::taskUpdateBTState, "TaskUpdateBTState", 10000, NULL, 2, &TaskUpdateBTState );
+}
 
 void MyBMS::initBMS(shared_bms_data_t *myBMSData) {
     _myBMSData = myBMSData;
+
+    attachInterrupt(REED_PIN, LidISR, CHANGE);
+    attachInterrupt(BT_SWITCH_PIN, BTISR, CHANGE);
+
     xTaskCreate( taskCallbackBMS, "TaskHandleBMS", 10000, NULL, 2, &TaskHandleBMS );
 }
 
@@ -57,16 +70,24 @@ void MyBMS::readBMSStatus() {
     }
 }
 
-void MyBMS::taskCallbackBMS( void * pvParameters ) {
-    Serial1.begin(9600, SERIAL_8N1, BMS_RX_PIN, BMS_TX_PIN);
+void MyBMS::taskUpdateLidState( void * pvParameters ) {
+    _myBMSData->lid_open = digitalRead(REED_PIN);
+    vTaskDelete(NULL);
+}
 
-    TickType_t xLastWakeTime;
+void MyBMS::taskUpdateBTState( void * pvParameters ) {
+    _myBMSData->bt_enabled = !digitalRead(BT_SWITCH_PIN);
+    vTaskDelete(NULL);
+}
+
+void MyBMS::taskCallbackBMS( void * pvParameters ) {
+    TickType_t xLastWakeTime = xTaskGetTickCount();
     const TickType_t xFrequency = TASK_INTERVAL_BMS / portTICK_PERIOD_MS;
-    xLastWakeTime = xTaskGetTickCount ();
+
+    Serial1.begin(9600, SERIAL_8N1, BMS_RX_PIN, BMS_TX_PIN);
     for( ;; )
     {
         readBMSStatus();
-
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }
 }

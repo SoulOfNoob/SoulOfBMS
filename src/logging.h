@@ -37,7 +37,8 @@
 
         private:
             static MyBMS::shared_bms_data_t *_myBMSData;
-
             static void taskCallbackLogger( void * pvParameters );
+
+            const TickType_t logger_xFrequency = TASK_INTERVAL_LOGGER / portTICK_PERIOD_MS;
     };
 #endif

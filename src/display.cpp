@@ -114,13 +114,18 @@ void MyDisplays::updateEPAPER(bool initialUpdate = false) {
 }
 
 void MyDisplays::taskCallbackOLED( void * pvParameters ) {
-    initOLED();
-    TickType_t xLastWakeTime;
+    TickType_t xLastWakeTime = xTaskGetTickCount ();
     const TickType_t xFrequency = TASK_INTERVAL_OLED / portTICK_PERIOD_MS;
-    xLastWakeTime = xTaskGetTickCount ();
+
+    initOLED();
     for( ;; )
     {
-        updateOLED();
+        if(_myBMSData->lid_open) {
+            updateOLED();
+        } else {
+            oled.clearDisplay();
+            oled.display();
+        }
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }
 }
@@ -128,12 +133,13 @@ void MyDisplays::taskCallbackOLED( void * pvParameters ) {
 void MyDisplays::taskCallbackEPAPER( void * pvParameters ) {
     initEPAPER();
     epaper.powerOff(); //ToDo: remove when fixing partial update
-    TickType_t xLastWakeTime;
-    const TickType_t xFrequency = TASK_INTERVAL_EPAPER / portTICK_PERIOD_MS;
-    xLastWakeTime = xTaskGetTickCount ();
-    for( ;; )
-    {
-        //updateEPAPER();
-        vTaskDelayUntil( &xLastWakeTime, xFrequency );
-    }
+    vTaskDelete(NULL);
+    // TickType_t xLastWakeTime;
+    // const TickType_t xFrequency = TASK_INTERVAL_EPAPER / portTICK_PERIOD_MS;
+    // xLastWakeTime = xTaskGetTickCount ();
+    // for( ;; )
+    // {
+    //     updateEPAPER();
+    //     vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    // }
 }
