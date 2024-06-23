@@ -24,6 +24,9 @@ void MyBMS::initBMS(shared_bms_data_t *myBMSData) {
     pinMode(REED_PIN, INPUT_PULLUP);
     pinMode(BT_SWITCH_PIN, INPUT_PULLUP);
 
+    adc1_config_width(ADC_WIDTH_BIT_12);
+    adc1_config_channel_atten(ADC1_GPIO35_CHANNEL, ADC_ATTEN_DB_11);
+
     _myBMSData->bt_enabled = !digitalRead(BT_SWITCH_PIN);
     _myBMSData->lid_open = digitalRead(REED_PIN);
 
@@ -76,6 +79,11 @@ void MyBMS::readBMSStatus() {
     }
 }
 
+void MyBMS::readVbat() {
+    _myBMSData->vBatInt = adc1_get_raw(ADC1_GPIO35_CHANNEL);
+    _myBMSData->vBatFloat = (float) _myBMSData->vBatInt * 3500 / 4095 * 2 / 1000;
+}
+
 void MyBMS::taskUpdateLidState( void * pvParameters ) {
     _myBMSData->lid_open = digitalRead(REED_PIN);
     if(!_myBMSData->lid_open && !_myBMSData->bt_enabled) {
@@ -104,6 +112,7 @@ void MyBMS::taskCallbackBMS( void * pvParameters ) {
     for( ;; )
     {
         readBMSStatus();
+        readVbat();
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }
 }

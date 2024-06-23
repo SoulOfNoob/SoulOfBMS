@@ -74,7 +74,7 @@ void MyDisplays::updateOLED() {
     oled.setTextWrap(false);
     oled.setTextColor(WHITE);
     oled.setCursor(0, 10);
-    oled.printf("%u%% %s\n", _myBMSData->status.currentCapacity, _myBMSData->charging_state.c_str());
+    oled.printf("%u%% %s (%.2fV)\n", _myBMSData->status.currentCapacity, _myBMSData->charging_state.c_str(), _myBMSData->vBatFloat);
     oled.printf("Remaining: %.0fWh\n", _myBMSData->remaining_capacity_Wh);
     oled.printf("Time Left: %.2fh\n", _myBMSData->remaining_time_h_cur);
     oled.printf("A: %.2fA (%.2fW)\n", _myBMSData->A, _myBMSData->W);

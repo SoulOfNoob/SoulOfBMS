@@ -67,6 +67,7 @@ void MyLogger::printBMSStatusToConsole() {
     Serial.printf("Mosfet: %u\n", _myBMSData->status.mosfetStatus);
     Serial.printf("Lid Open: %u\n", _myBMSData->lid_open);
     Serial.printf("BT Enabled: %u\n", _myBMSData->bt_enabled);
+    Serial.printf("vBat: %umV (%.2fV) \n", _myBMSData->vBatInt, _myBMSData->vBatFloat);
 }
 
 void MyLogger::taskCallbackLogger( void * pvParameters ) {

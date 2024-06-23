@@ -1,6 +1,8 @@
 #ifndef BMS_H
 #define BMS_H
     #include <Arduino.h>
+    #include <driver/adc.h>
+    #include <soc/adc_channel.h>
 
     // BMS Lib
     #include <jbdbms.h>
@@ -30,13 +32,15 @@
                 float total_capacity_Wh;
                 float temp_01;
                 float temp_02;
+                float vBatFloat;
+                int vBatInt;
                 bool lid_open;
                 bool bt_enabled;
-                bool log_enabled;
             } shared_bms_data_t;
 
             static void initBMS(shared_bms_data_t *myBMSData);
             static void readBMSStatus();
+            static void readVbat();
             static void taskUpdateLidState( void * pvParameters );
             static void taskUpdateBTState( void * pvParameters );
 
