@@ -24,10 +24,8 @@
             static void initOLED();
             static void initEPAPER();
 
-            static void epaperHelloWorld();
-
             static void updateOLED();
-            static void updateEPAPER();
+            static void updateEPAPER(bool initialUpdate);
 
         private:
             static MyBMS::shared_bms_data_t *_myBMSData;

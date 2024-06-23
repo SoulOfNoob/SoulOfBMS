@@ -8,6 +8,9 @@ GxEPD2_BW<GxEPD2_213_BN, GxEPD2_213_BN::HEIGHT> epaper(GxEPD2_213_BN(SS, 17, 16,
 
 MyBMS::shared_bms_data_t *MyDisplays::_myBMSData;
 
+const char epaper_headline[] = "Defqon.1";
+const char epaper_subline[] = "Camp PokeCenter";
+
 int count = 0;
 
 void MyDisplays::initDisplays(MyBMS::shared_bms_data_t *myBMSData) {
@@ -30,22 +33,13 @@ void MyDisplays::initOLED() {
 }
 void MyDisplays::initEPAPER() {
     Serial.println("INIT EPAPER - START");
-    epaper.init(0, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
-    epaperHelloWorld();
-    epaper.hibernate();
-    Serial.println("INIT EPAPER - Hibernating");
-    Serial.println("INIT EPAPER - DONE");
-}
-
-void MyDisplays::epaperHelloWorld() {
-    const char headline[] = "Defqon.1";
-    const char subline[] = "Camp PokeCenter";
+    epaper.init(115200, true, 2, false); // USE THIS for Waveshare boards with "clever" reset circuit, 2ms reset pulse
 
     epaper.setRotation(1);
     epaper.setFont(&FreeMonoBold12pt7b);
     epaper.setTextColor(GxEPD_BLACK);
     int16_t tbx, tby; uint16_t tbw, tbh;
-    epaper.getTextBounds(headline, 0, 0, &tbx, &tby, &tbw, &tbh);
+    epaper.getTextBounds(epaper_headline, 0, 0, &tbx, &tby, &tbw, &tbh);
     // center bounding box by transposition of origin:
     uint16_t x = ((epaper.width() - tbw) / 2) - tbx;
     uint16_t y = ((epaper.height() - tbh) / 2) - tby;
@@ -54,15 +48,19 @@ void MyDisplays::epaperHelloWorld() {
     epaper.setFullWindow();
     epaper.fillScreen(GxEPD_WHITE);
     epaper.setCursor(x-70, y-50);
-    epaper.print(headline);
+    epaper.print(epaper_headline);
 
     epaper.setFont(&FreeMonoBold9pt7b);
     epaper.setCursor(x-70, y-30);
-    epaper.print(subline);
+    epaper.print(epaper_subline);
 
-    Serial.println("LOOP EPAPER - pre display");
+    //updateEPAPER(true);
+
+    Serial.println("INIT EPAPER - pre display");
     epaper.display(false); // full update
-    Serial.println("LOOP EPAPER - headline done");
+    Serial.println("INIT EPAPER - headline done");
+    epaper.hibernate();
+    Serial.println("INIT EPAPER - DONE");
 }
 
 void MyDisplays::updateOLED() {
@@ -80,12 +78,13 @@ void MyDisplays::updateOLED() {
     oled.display(); 
 }
 
-void MyDisplays::updateEPAPER() {
+void MyDisplays::updateEPAPER(bool initialUpdate = false) {
     epaper.fillRect(0, 40, epaper.width(), epaper.height()-40, GxEPD_WHITE);
     epaper.setFont(&FreeMonoBold9pt7b);
+    epaper.setTextColor(GxEPD_BLACK);
 
     epaper.setCursor(0, 80);    
-    epaper.print("Remaining");
+    epaper.print("Remaining test");
 
     epaper.setCursor(0, 100);    
     epaper.print(_myBMSData->status.currentCapacity);       
@@ -101,10 +100,17 @@ void MyDisplays::updateEPAPER() {
     epaper.print("°C | ");
     epaper.print(_myBMSData->temp_02);
     epaper.print("°C");
-
-    Serial.println("LOOP EPAPER - pre display");
-    epaper.display(true); // partial update
-    Serial.println("LOOP EPAPER - partial done");
+    
+    if (!initialUpdate)
+    {
+        Serial.println("LOOP EPAPER - pre display");
+        epaper.display(true); // partial update
+        Serial.println("LOOP EPAPER - partial done");
+        epaper.hibernate();
+        //epaper.powerOff();
+        Serial.println("LOOP EPAPER - Hibernating");
+    }
+    
 }
 
 void MyDisplays::taskCallbackOLED( void * pvParameters ) {
@@ -121,12 +127,13 @@ void MyDisplays::taskCallbackOLED( void * pvParameters ) {
 
 void MyDisplays::taskCallbackEPAPER( void * pvParameters ) {
     initEPAPER();
+    epaper.powerOff(); //ToDo: remove when fixing partial update
     TickType_t xLastWakeTime;
     const TickType_t xFrequency = TASK_INTERVAL_EPAPER / portTICK_PERIOD_MS;
     xLastWakeTime = xTaskGetTickCount ();
     for( ;; )
     {
-        updateEPAPER();
+        //updateEPAPER();
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }
 }

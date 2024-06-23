@@ -65,7 +65,8 @@ void MyLogger::printBMSStatusToConsole() {
     Serial.println("------- DEBUG ------");
     Serial.printf("Fault: %u\n", _myBMSData->status.fault);
     Serial.printf("Mosfet: %u\n", _myBMSData->status.mosfetStatus);
-    Serial.printf("Reed: %u\n", digitalRead(13));
+    Serial.printf("Lid Open: %u\n", digitalRead(12));
+    Serial.printf("BT Switch: %u\n", !digitalRead(27));
 }
 
 void MyLogger::taskCallbackLogger( void * pvParameters ) {
