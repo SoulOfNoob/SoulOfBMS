@@ -15,7 +15,9 @@ const char epaper_subline[] = "Camp PokeCenter";
 
 int count = 0;
 
-void MyDisplays::initDisplays(MyBMS::shared_bms_data_t *myBMSData) {
+byte aniCount = 0;
+
+void MyDisplays::init(MyBMS::shared_bms_data_t *myBMSData) {
     _myBMSData = myBMSData;
     xTaskCreate( taskCallbackOLED, "TaskHandleOLED", 10000, NULL, 1, &TaskHandleOLED );
     xTaskCreate( taskCallbackEPAPER, "TaskHandleEPAPER", 10000, NULL, 1, &TaskHandleEPAPER );
@@ -68,18 +70,33 @@ void MyDisplays::initEPAPER() {
     }
 }
 
+String animationLoop() {
+    aniCount++;
+    if(aniCount > 4) aniCount = 1;
+    switch (aniCount)
+    {
+        case 1:     return "-"; 
+        case 2:     return "\\"; 
+        case 3:     return "|"; 
+        case 4:     return "/"; 
+        default:    return "?";
+    }
+}
+
 void MyDisplays::updateOLED() {
     oled.clearDisplay();
     oled.setTextSize(1);
     oled.setTextWrap(false);
     oled.setTextColor(WHITE);
     oled.setCursor(0, 10);
-    oled.printf("%u%% %s (%.2fV)\n", _myBMSData->status.currentCapacity, _myBMSData->charging_state.c_str(), _myBMSData->vBatFloat);
-    oled.printf("Remaining: %.0fWh\n", _myBMSData->remaining_capacity_Wh);
-    oled.printf("Time Left: %.2fh\n", _myBMSData->remaining_time_h_cur);
+    oled.printf("%u%% %s %s\n", _myBMSData->status.currentCapacity, _myBMSData->charging_state.c_str(), animationLoop().c_str());
+    oled.printf("Cap: %.0fWh (%.2fh)\n", _myBMSData->remaining_capacity_Wh, _myBMSData->remaining_time_h_cur);
+    // oled.printf("Remaining: %.0fWh\n", _myBMSData->remaining_capacity_Wh);
+    // oled.printf("Time Left: %.2fh\n", _myBMSData->remaining_time_h_cur);
     oled.printf("A: %.2fA (%.2fW)\n", _myBMSData->A, _myBMSData->W);
     oled.printf("V: %.2fV (%.2fV)\n", _myBMSData->V, _myBMSData->avgCellVolt);
     oled.printf("Temp: %.1fC | %.1fC\n", _myBMSData->temp_01, _myBMSData->temp_02);
+    oled.printf("vBat: %umV (%.2fV) \n", _myBMSData->vBatRaw, _myBMSData->vBatFloat);
     oled.display(); 
 }
 
@@ -121,6 +138,9 @@ void MyDisplays::updateEPAPER(bool initialUpdate = false) {
 void MyDisplays::taskCallbackOLED( void * pvParameters ) {
     TickType_t xLastWakeTime = xTaskGetTickCount ();
     const TickType_t xFrequency = TASK_INTERVAL_OLED / portTICK_PERIOD_MS;
+    // uint32_t ulNotificationValue;
+    // const TickType_t xMaxBlockTime = pdMS_TO_TICKS( TASK_INTERVAL_OLED );
+    // const UBaseType_t xArrayIndex = 1;
 
     initOLED();
     for( ;; )
@@ -131,6 +151,15 @@ void MyDisplays::taskCallbackOLED( void * pvParameters ) {
             oled.clearDisplay();
             oled.display();
         }
+
+        // ulNotificationValue = ulTaskNotifyTakeIndexed(xArrayIndex, pdTRUE, xMaxBlockTime);
+        // if( ulNotificationValue == 1 ) {
+        //     Serial.println("The transmission ended as expected.");
+        //     Serial.println(ulNotificationValue);
+        // } else {
+        //     Serial.println("The call to ulTaskNotifyTake() timed out.");
+        //     Serial.println(ulNotificationValue);
+        // }
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }
 }

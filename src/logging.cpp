@@ -12,7 +12,7 @@ String rtc_date;
 
 MyBMS::shared_bms_data_t *MyLogger::_myBMSData;
 
-void MyLogger::initLogger(MyBMS::shared_bms_data_t *myBMSData) {
+void MyLogger::init(MyBMS::shared_bms_data_t *myBMSData) {
     _myBMSData = myBMSData;
     xTaskCreate( taskCallbackLogger, "TaskHandleLogger", 10000, NULL, 1, &TaskHandleLogger );
 }
@@ -67,7 +67,7 @@ void MyLogger::printBMSStatusToConsole() {
     Serial.printf("Mosfet: %u\n", _myBMSData->status.mosfetStatus);
     Serial.printf("Lid Open: %u\n", _myBMSData->lid_open);
     Serial.printf("BT Enabled: %u\n", _myBMSData->bt_enabled);
-    Serial.printf("vBat: %umV (%.2fV) \n", _myBMSData->vBatInt, _myBMSData->vBatFloat);
+    Serial.printf("vBat: %umV (%.2fV) \n", _myBMSData->vBatRaw, _myBMSData->vBatFloat);
 }
 
 void MyLogger::taskCallbackLogger( void * pvParameters ) {
@@ -86,7 +86,7 @@ void MyLogger::taskCallbackLogger( void * pvParameters ) {
         // readRTC();
         // printRTC();
         if(_myBMSData->lid_open) {
-            printBMSStatusToConsole();
+            //printBMSStatusToConsole();
         }
 
         vTaskDelayUntil( &xLastWakeTime, xFrequency );

@@ -18,6 +18,7 @@ uint8_t *Serial1ReadBuffer = new uint8_t[Serial1_BUF_SIZE_MAX];
 
 TaskHandle_t TaskHandleBT;
 TaskHandle_t _TaskHandleBMS;
+TaskHandle_t _TaskHandleOLED;
 bool deviceConnected = false;
 
 //Setup callbacks onConnect and onDisconnect
@@ -58,6 +59,7 @@ class UartTxBMSCallback : public BLECharacteristicCallbacks
 
 void MyBluetooth::initBT() {
     _TaskHandleBMS = xTaskGetHandle("TaskHandleBMS");
+    _TaskHandleOLED = xTaskGetHandle("TaskHandleOLED");
     xTaskCreate( taskCallbackBT, "TaskHandleBT", 10000, NULL, 2, &TaskHandleBT );
 }
 

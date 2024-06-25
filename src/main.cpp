@@ -1,5 +1,3 @@
-#define FEATURE_BT
-
 #include <Arduino.h>
 #include <Wire.h>
 
@@ -18,11 +16,9 @@ RTC_DATA_ATTR int bootCount = 0;
 
 MyBMS::shared_bms_data_t myBMSData;
 
+TaskHandle_t TaskUpdateLidState;
+TaskHandle_t TaskUpdateBTState;
 
-/*
-Method to print the reason by which ESP32
-has been awaken from sleep
-*/
 void print_wakeup_reason(){
   esp_sleep_wakeup_cause_t wakeup_reason;
 
@@ -39,6 +35,55 @@ void print_wakeup_reason(){
   }
 }
 
+void taskUpdateLidState( void * pvParameters ) {
+    myBMSData.lid_open = digitalRead(REED_PIN);
+    if(!myBMSData.lid_open && !myBMSData.bt_enabled) {
+        //Go to sleep now
+        Serial.println("Going to sleep now");
+        delay(2000);
+        esp_deep_sleep_start();
+        Serial.println("This will never be printed");
+    }
+    vTaskDelete(NULL);
+}
+
+void taskUpdateBTState( void * pvParameters ) {
+    myBMSData.bt_enabled = !digitalRead(BT_SWITCH_PIN);
+    esp_sleep_enable_timer_wakeup(100);
+    esp_deep_sleep_start();
+    //ESP.restart(); // ToDo: init BT on runtime without reboot
+    vTaskDelete(NULL);
+}
+
+void IRAM_ATTR LidISR() {
+    // BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    // const UBaseType_t xArrayIndex = 2;
+    // vTaskNotifyGiveIndexedFromISR(xTaskGetHandle("TaskHandleOLED"), xArrayIndex, &xHigherPriorityTaskWoken );
+    xTaskCreate( taskUpdateLidState, "TaskUpdateLidState", 10000, NULL, 2, &TaskUpdateLidState );
+}
+
+void IRAM_ATTR BTISR() {
+    // BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+    // const UBaseType_t xArrayIndex = 1;
+    // vTaskNotifyGiveIndexedFromISR(xTaskGetHandle("TaskHandleOLED"), xArrayIndex, &xHigherPriorityTaskWoken );
+    xTaskCreate( taskUpdateBTState, "TaskUpdateBTState", 10000, NULL, 2, &TaskUpdateBTState );
+}
+
+void setupInterrupts() {
+    pinMode(REED_PIN, INPUT_PULLUP);
+    pinMode(BT_SWITCH_PIN, INPUT_PULLUP);
+
+    rtc_gpio_pullup_en((gpio_num_t) REED_PIN);
+    rtc_gpio_pulldown_dis((gpio_num_t) REED_PIN);
+    esp_sleep_enable_ext0_wakeup((gpio_num_t) REED_PIN, HIGH);
+
+    attachInterrupt(REED_PIN, LidISR, CHANGE);
+    attachInterrupt(BT_SWITCH_PIN, BTISR, CHANGE);
+
+    myBMSData.lid_open = digitalRead(REED_PIN);
+    myBMSData.bt_enabled = !digitalRead(BT_SWITCH_PIN);
+}
+
 void setup() {
     Wire.begin(I2C_SDA, I2C_SCL);
     Serial.begin(115200);
@@ -49,19 +94,15 @@ void setup() {
 
     print_wakeup_reason();
 
-    rtc_gpio_pullup_en(GPIO_NUM_12);
-    rtc_gpio_pulldown_dis(GPIO_NUM_12);
-    esp_sleep_enable_ext0_wakeup(GPIO_NUM_12, HIGH);
+    setupInterrupts();
     
-    MyBMS::initBMS(&myBMSData);
-    MyLogger::initLogger(&myBMSData);
-    MyDisplays::initDisplays(&myBMSData);
+    MyBMS::init(&myBMSData);
+    MyLogger::init(&myBMSData);
+    MyDisplays::init(&myBMSData);
 
-    #ifdef FEATURE_BT
-        if(myBMSData.bt_enabled) {
-            MyBluetooth::initBT();
-        }
-    #endif
+    if(myBMSData.bt_enabled) {
+        MyBluetooth::initBT();
+    }
 
     Serial.println("Finished setup");
     Serial.println("-------------------------------");
@@ -70,3 +111,4 @@ void setup() {
 void loop() {
     
 }
+

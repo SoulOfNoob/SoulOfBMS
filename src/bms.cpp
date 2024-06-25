@@ -1,39 +1,38 @@
 #include "bms.h"
 
-#define NOMINAL_CELL_VOLTAGE 3.7
-
 TaskHandle_t TaskHandleBMS;
-TaskHandle_t TaskUpdateLidState;
-TaskHandle_t TaskUpdateBTState;
+TaskHandle_t TaskHandleVbat;
 
 JbdBms jbdbms = JbdBms();
 
 MyBMS::shared_bms_data_t *MyBMS::_myBMSData;
 
-void IRAM_ATTR LidISR() {
-    xTaskCreate( MyBMS::taskUpdateLidState, "TaskUpdateLidState", 10000, NULL, 2, &TaskUpdateLidState );
+esp_adc_cal_characteristics_t *adc_chars = new esp_adc_cal_characteristics_t;
+
+uint16_t MyBMS::avgAnalogRead(adc1_channel_t channel, uint16_t samples) {
+  uint32_t sum = 0;
+  for (int x=0; x<samples; x++) {
+    sum += adc1_get_raw(channel);
+  }
+  sum /= samples;
+  return esp_adc_cal_raw_to_voltage(sum, adc_chars);
 }
 
-void IRAM_ATTR BTISR() {
-    xTaskCreate( MyBMS::taskUpdateBTState, "TaskUpdateBTState", 10000, NULL, 2, &TaskUpdateBTState );
-}
-
-void MyBMS::initBMS(shared_bms_data_t *myBMSData) {
+void MyBMS::init(shared_bms_data_t *myBMSData) {
     _myBMSData = myBMSData;
 
-    pinMode(REED_PIN, INPUT_PULLUP);
-    pinMode(BT_SWITCH_PIN, INPUT_PULLUP);
-
-    adc1_config_width(ADC_WIDTH_BIT_12);
-    adc1_config_channel_atten(ADC1_GPIO35_CHANNEL, ADC_ATTEN_DB_11);
-
-    _myBMSData->bt_enabled = !digitalRead(BT_SWITCH_PIN);
-    _myBMSData->lid_open = digitalRead(REED_PIN);
-
-    attachInterrupt(REED_PIN, LidISR, CHANGE);
-    attachInterrupt(BT_SWITCH_PIN, BTISR, CHANGE);
-
     xTaskCreate( taskCallbackBMS, "TaskHandleBMS", 10000, NULL, 2, &TaskHandleBMS );
+    xTaskCreate( taskCallbackVbat, "TaskHandleVbat", 10000, NULL, 2, &TaskHandleVbat );
+}
+
+void MyBMS::initBMS() {
+    Serial1.begin(9600, SERIAL_8N1, BMS_RX_PIN, BMS_TX_PIN);
+}
+
+void MyBMS::initVbat() {
+    adc1_config_width(ADC_WIDTH_BIT_11);
+    adc1_config_channel_atten((adc1_channel_t) ADC1_GPIO35_CHANNEL, ADC_ATTEN_DB_11);
+    esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_DB_11, ADC_WIDTH_BIT_11, ADC_VMAX, adc_chars);
 }
 
 void MyBMS::readBMSStatus() {
@@ -80,38 +79,27 @@ void MyBMS::readBMSStatus() {
 }
 
 void MyBMS::readVbat() {
-    _myBMSData->vBatInt = adc1_get_raw(ADC1_GPIO35_CHANNEL);
-    _myBMSData->vBatFloat = (float) _myBMSData->vBatInt * 3500 / 4095 * 2 / 1000;
-}
-
-void MyBMS::taskUpdateLidState( void * pvParameters ) {
-    _myBMSData->lid_open = digitalRead(REED_PIN);
-    if(!_myBMSData->lid_open && !_myBMSData->bt_enabled) {
-        //Go to sleep now
-        Serial.println("Going to sleep now");
-        delay(2000);
-        esp_deep_sleep_start();
-        Serial.println("This will never be printed");
-    }
-    vTaskDelete(NULL);
-}
-
-void MyBMS::taskUpdateBTState( void * pvParameters ) {
-    _myBMSData->bt_enabled = !digitalRead(BT_SWITCH_PIN);
-    esp_sleep_enable_timer_wakeup(100);
-    esp_deep_sleep_start();
-    //ESP.restart(); // ToDo: init BT on runtime without reboot
-    vTaskDelete(NULL);
+    _myBMSData->vBatRaw = avgAnalogRead((adc1_channel_t) ADC1_GPIO35_CHANNEL, 8);
+    _myBMSData->vBatFloat = (float) _myBMSData->vBatRaw * 2 / 1000;   // measured mV to actual V (*2 due to voltagedivider)
 }
 
 void MyBMS::taskCallbackBMS( void * pvParameters ) {
     TickType_t xLastWakeTime = xTaskGetTickCount();
     const TickType_t xFrequency = TASK_INTERVAL_BMS / portTICK_PERIOD_MS;
-
-    Serial1.begin(9600, SERIAL_8N1, BMS_RX_PIN, BMS_TX_PIN);
+    initBMS();
     for( ;; )
     {
         readBMSStatus();
+        vTaskDelayUntil( &xLastWakeTime, xFrequency );
+    }
+}
+
+void MyBMS::taskCallbackVbat( void * pvParameters ) {
+    TickType_t xLastWakeTime = xTaskGetTickCount();
+    const TickType_t xFrequency = TASK_INTERVAL_VBAT / portTICK_PERIOD_MS;
+    initVbat();
+    for( ;; )
+    {
         readVbat();
         vTaskDelayUntil( &xLastWakeTime, xFrequency );
     }

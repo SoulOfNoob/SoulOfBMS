@@ -25,7 +25,7 @@
 
     class MyLogger {
         public:
-            static void initLogger(MyBMS::shared_bms_data_t *myBMSData);
+            static void init(MyBMS::shared_bms_data_t *myBMSData);
 
             static void initSD();
             static void initRTC();

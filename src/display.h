@@ -14,12 +14,12 @@
 
     #include "bms.h"
 
-    #define TASK_INTERVAL_OLED 1000 * 2 // 2 sec
+    #define TASK_INTERVAL_OLED 1000 * 1 // 1 sec
     #define TASK_INTERVAL_EPAPER 1000 * 60 * 15 // 15 min
 
     class MyDisplays {
         public:
-            static void initDisplays(MyBMS::shared_bms_data_t *myBMSData);
+            static void init(MyBMS::shared_bms_data_t *myBMSData);
 
             static void initOLED();
             static void initEPAPER();
