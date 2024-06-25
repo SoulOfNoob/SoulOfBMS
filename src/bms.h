@@ -42,9 +42,12 @@
                 float temp_02;
                 float vBatFloat;
                 int vBatRaw;
-                bool lid_open;
-                bool bt_enabled;
+                bool lidOpen;
+                bool btEnabled;
+                bool deviceConnected;
             } shared_bms_data_t;
+
+            static shared_bms_data_t *_myBMSData;
 
             static void init(shared_bms_data_t *myBMSData);
             static void readBMSStatus();
@@ -54,7 +57,6 @@
             static uint16_t avgAnalogRead(adc1_channel_t channel, uint16_t samples = 8);
 
         private:
-            static shared_bms_data_t *_myBMSData;
             static void initBMS();
             static void initVbat();
             static void taskCallbackBMS( void * pvParameters );

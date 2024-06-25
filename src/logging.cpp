@@ -23,7 +23,7 @@ void MyLogger::initSD() {
     SDSPI.begin(SDCARD_SCLK, SDCARD_MISO, SDCARD_MOSI);
     bool rlst = SD.begin(SDCARD_CS, SDSPI);
 
-    String sizeString = "INIT SD - SD Size:" + String(SD.cardSize() / 1024.0 / 1024.0 / 1024.0) + "G";
+    String sizeString = "INIT SD - SD Size: " + String(SD.cardSize() / 1024.0 / 1024.0 / 1024.0) + "G";
     Serial.println(rlst ? sizeString : "INIT SD - SD:N/A");
     Serial.println("INIT SD - Done");
 }
@@ -65,8 +65,8 @@ void MyLogger::printBMSStatusToConsole() {
     Serial.println("------- DEBUG ------");
     Serial.printf("Fault: %u\n", _myBMSData->status.fault);
     Serial.printf("Mosfet: %u\n", _myBMSData->status.mosfetStatus);
-    Serial.printf("Lid Open: %u\n", _myBMSData->lid_open);
-    Serial.printf("BT Enabled: %u\n", _myBMSData->bt_enabled);
+    Serial.printf("Lid Open: %u\n", _myBMSData->lidOpen);
+    Serial.printf("BT Enabled: %u\n", _myBMSData->btEnabled);
     Serial.printf("vBat: %umV (%.2fV) \n", _myBMSData->vBatRaw, _myBMSData->vBatFloat);
 }
 
@@ -85,7 +85,7 @@ void MyLogger::taskCallbackLogger( void * pvParameters ) {
     {
         // readRTC();
         // printRTC();
-        if(_myBMSData->lid_open) {
+        if(_myBMSData->lidOpen) {
             //printBMSStatusToConsole();
         }
 

@@ -13,7 +13,7 @@
 
     class MyBluetooth {
         public:
-            static void initBT();
+            static void init();
             static void setupBT();
             static void loopBT();
         private:

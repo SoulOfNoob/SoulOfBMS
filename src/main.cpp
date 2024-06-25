@@ -36,19 +36,17 @@ void print_wakeup_reason(){
 }
 
 void taskUpdateLidState( void * pvParameters ) {
-    myBMSData.lid_open = digitalRead(REED_PIN);
-    if(!myBMSData.lid_open && !myBMSData.bt_enabled) {
-        //Go to sleep now
+    myBMSData.lidOpen = digitalRead(REED_PIN);
+    if(!myBMSData.lidOpen && !myBMSData.btEnabled) {
         Serial.println("Going to sleep now");
         delay(2000);
         esp_deep_sleep_start();
-        Serial.println("This will never be printed");
     }
     vTaskDelete(NULL);
 }
 
 void taskUpdateBTState( void * pvParameters ) {
-    myBMSData.bt_enabled = !digitalRead(BT_SWITCH_PIN);
+    myBMSData.btEnabled = !digitalRead(BT_SWITCH_PIN);
     esp_sleep_enable_timer_wakeup(100);
     esp_deep_sleep_start();
     //ESP.restart(); // ToDo: init BT on runtime without reboot
@@ -80,8 +78,8 @@ void setupInterrupts() {
     attachInterrupt(REED_PIN, LidISR, CHANGE);
     attachInterrupt(BT_SWITCH_PIN, BTISR, CHANGE);
 
-    myBMSData.lid_open = digitalRead(REED_PIN);
-    myBMSData.bt_enabled = !digitalRead(BT_SWITCH_PIN);
+    myBMSData.lidOpen = digitalRead(REED_PIN);
+    myBMSData.btEnabled = !digitalRead(BT_SWITCH_PIN);
 }
 
 void setup() {
@@ -100,8 +98,8 @@ void setup() {
     MyLogger::init(&myBMSData);
     MyDisplays::init(&myBMSData);
 
-    if(myBMSData.bt_enabled) {
-        MyBluetooth::initBT();
+    if(myBMSData.btEnabled) {
+        MyBluetooth::init();
     }
 
     Serial.println("Finished setup");
@@ -109,6 +107,5 @@ void setup() {
 }
 
 void loop() {
-    
+    vTaskDelay(portMAX_DELAY);
 }
-

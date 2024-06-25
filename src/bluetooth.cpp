@@ -57,7 +57,7 @@ class UartTxBMSCallback : public BLECharacteristicCallbacks
     }
 };
 
-void MyBluetooth::initBT() {
+void MyBluetooth::init() {
     _TaskHandleBMS = xTaskGetHandle("TaskHandleBMS");
     _TaskHandleOLED = xTaskGetHandle("TaskHandleOLED");
     xTaskCreate( taskCallbackBT, "TaskHandleBT", 10000, NULL, 2, &TaskHandleBT );
@@ -93,6 +93,7 @@ void MyBluetooth::setupBT() {
 
 void MyBluetooth::loopBT(){
     if(deviceConnected) {
+        MyBMS::_myBMSData->charging_state = "BT Connected";
         int uartBytesAvailable = Serial1.available();
         if (uartBytesAvailable) {
             if (pServer->getConnectedCount() > 0) {

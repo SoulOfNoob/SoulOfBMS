@@ -81,6 +81,11 @@ void MyBMS::readBMSStatus() {
 void MyBMS::readVbat() {
     _myBMSData->vBatRaw = avgAnalogRead((adc1_channel_t) ADC1_GPIO35_CHANNEL, 8);
     _myBMSData->vBatFloat = (float) _myBMSData->vBatRaw * 2 / 1000;   // measured mV to actual V (*2 due to voltagedivider)
+
+    if(_myBMSData->vBatFloat <= 2.7) {
+        Serial.println("Going to sleep due to low voltage");
+        esp_deep_sleep_start();
+    }
 }
 
 void MyBMS::taskCallbackBMS( void * pvParameters ) {

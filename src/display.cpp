@@ -145,7 +145,7 @@ void MyDisplays::taskCallbackOLED( void * pvParameters ) {
     initOLED();
     for( ;; )
     {
-        if(_myBMSData->lid_open) {
+        if(_myBMSData->lidOpen) {
             updateOLED();
         } else {
             oled.clearDisplay();
