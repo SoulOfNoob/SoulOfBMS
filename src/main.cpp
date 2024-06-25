@@ -39,7 +39,7 @@ void taskUpdateLidState( void * pvParameters ) {
     myBMSData.lidOpen = digitalRead(REED_PIN);
     if(!myBMSData.lidOpen && !myBMSData.btEnabled) {
         Serial.println("Going to sleep now");
-        delay(2000);
+        delay(1000);
         esp_deep_sleep_start();
     }
     vTaskDelete(NULL);
@@ -48,8 +48,7 @@ void taskUpdateLidState( void * pvParameters ) {
 void taskUpdateBTState( void * pvParameters ) {
     myBMSData.btEnabled = !digitalRead(BT_SWITCH_PIN);
     esp_sleep_enable_timer_wakeup(100);
-    esp_deep_sleep_start();
-    //ESP.restart(); // ToDo: init BT on runtime without reboot
+    esp_deep_sleep_start(); // ToDo: init BT on runtime without reboot
     vTaskDelete(NULL);
 }
 
@@ -85,10 +84,6 @@ void setupInterrupts() {
 void setup() {
     Wire.begin(I2C_SDA, I2C_SCL);
     Serial.begin(115200);
-    delay(2000); // wait for serial
-
-    ++bootCount;
-    Serial.println("Boot number: " + String(bootCount));
 
     print_wakeup_reason();
 
@@ -103,6 +98,9 @@ void setup() {
     }
 
     Serial.println("Finished setup");
+    delay(2000); // wait for serial
+    ++bootCount;
+    Serial.println("Boot number: " + String(bootCount));
     Serial.println("-------------------------------");
 }
 
