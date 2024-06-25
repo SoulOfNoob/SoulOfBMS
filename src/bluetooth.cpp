@@ -93,10 +93,10 @@ void MyBluetooth::setupBT() {
 
 void MyBluetooth::loopBT(){
     if(deviceConnected) {
-        MyBMS::_myBMSData->charging_state = "BT Connected";
         int uartBytesAvailable = Serial1.available();
         if (uartBytesAvailable) {
             if (pServer->getConnectedCount() > 0) {
+                MyBMS::_myBMSData->charging_state = "BT Connected";
                 // allow uart buffer to accumulate (don't send byte by byte)
                 if (uartBytesAvailable == 1) {
                     delay(50);
@@ -108,11 +108,12 @@ void MyBluetooth::loopBT(){
                 pRxCharacteristic->setValue(Serial1ReadBuffer, sizeSerial1Read);
                 pRxCharacteristic->notify(); // may use indicate instead but that will require client to send ack
             } else {
-                // Discard UART data if no connection
-                while (Serial1.available())
-                {
-                    Serial1.read();
-                }
+                deviceConnected = false;
+                // // Discard UART data if no connection
+                // while (Serial1.available())
+                // {
+                //     Serial1.read();
+                // }
             }
         }
     } 
